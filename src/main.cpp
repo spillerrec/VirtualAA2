@@ -1,60 +1,13 @@
 /*	This file is part of VirtualAA2, which is free software and is licensed
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
+#include "File.hpp"
+
 #include <cassert>
 #include <cstdio>
 #include <memory>
 #include <vector>
 
-
-class Buffer{
-	private:
-		std::unique_ptr<uint8_t[]> buffer;
-		size_t lenght;
-		
-	public:
-		Buffer() = default;
-		Buffer( size_t lenght ) : buffer( std::make_unique<uint8_t[]>( lenght ) ), lenght(lenght) { }
-		//Buffer( Buffer&& other ) : buffer(std::move(other.buffer)), lenght(other.lenght) {}
-		/*
-		Buffer( const Buffer& copy ) : Buffer( copy.lenght ) {
-			for( size_t i=0; i<lenght; i++ )
-				buffer[i] = copy.buffer[i];
-		}
-		*/
-		auto data(){ return buffer.get(); }
-		auto size() const{ return lenght; }
-		
-		auto begin(){ return buffer.get(); }
-		auto end(){ return buffer.get() + lenght; }
-		
-		uint8_t& operator[]( int index )       { return buffer[index]; }
-		uint8_t& operator[]( int index ) const { return buffer[index]; }
-};
-
-class File{
-	private:
-		FILE* handle;
-	
-	public:
-		File( const char* filepath ) : handle( std::fopen( filepath, "rb" ) ) {
-			//TODO: throw on (handle == nullptr)
-		}
-		~File(){ std::fclose( handle ); }
-		
-		void read( Buffer& buf ){
-			fread( buf.data(), 1, buf.size(), handle );
-		}
-		
-		int seek( long int offset, int origin )
-			{ return fseek( handle, offset, origin ); }
-		
-		Buffer read( size_t bytes ){
-			Buffer buf( bytes );
-			read( buf );
-			return buf;
-		}
-};
 
 unsigned convert32unsigned( uint8_t a, uint8_t b, uint8_t c, uint8_t d )
 	{ return a + (b<<8) + (c<<16) + (d<<24); }
