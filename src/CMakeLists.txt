@@ -9,6 +9,7 @@ find_package(Qt5Gui REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 set(SOURCES_CORE
+	PPArchive.cpp
 	main.cpp
 	)
 
