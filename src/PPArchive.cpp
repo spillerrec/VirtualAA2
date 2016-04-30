@@ -2,20 +2,11 @@
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
 #include "PPArchive.hpp"
+#include "BufferReader.hpp"
 #include "File.hpp"
 #include "debug.hpp"
 
 #include <cstdio>
-
-
-unsigned convert32unsigned( uint8_t a, uint8_t b, uint8_t c, uint8_t d )
-	{ return a + (b<<8) + (c<<16) + (d<<24); }
-
-unsigned convert32unsigned( const Buffer& b ){
-	assert_eq( b.size(), 4u );
-	return convert32unsigned( b[0], b[1], b[2], b[3] );
-}
-
 
 const uint8_t magic[] = {0x5B, 0x50, 0x50, 0x56, 0x45, 0x52, 0x5D, 0x00}; // "[PPVER]\0"
 
@@ -39,7 +30,7 @@ class HeaderDecrypter{
 unsigned read32u( File& file, HeaderDecrypter& decrypter ){
 	auto buf = file.read( 4 );
 	decrypter.decrypt( buf );
-	return convert32unsigned( buf );
+	return BufferReader( buf ).read32u();
 }
 
 const uint8_t mask[] = {
