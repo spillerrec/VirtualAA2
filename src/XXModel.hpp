@@ -21,7 +21,7 @@ class XXMesh{
 		ArrayView unknown2; //Use name at end?
 		
 	public:
-		XXMesh( XXFrame& parent, BufferReader& reader );
+		XXMesh( BufferReader& reader, int format, int vector2count );
 };
 
 class XXFrame{

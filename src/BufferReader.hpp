@@ -38,6 +38,11 @@ class BufferReader{
 			return buffer[position++];
 		}
 		
+		uint16_t read16u(){
+			auto b = read( 2 );
+			return (b[1] << 8) + b[0];
+		}
+		
 		uint32_t read32u(){
 			auto b = read( 4 );
 			return convert32unsigned( b[0], b[1], b[2], b[3] );
