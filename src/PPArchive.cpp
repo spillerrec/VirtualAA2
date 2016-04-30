@@ -3,8 +3,8 @@
 
 #include "PPArchive.hpp"
 #include "File.hpp"
+#include "debug.hpp"
 
-#include <cassert>
 #include <cstdio>
 
 
@@ -12,7 +12,7 @@ unsigned convert32unsigned( uint8_t a, uint8_t b, uint8_t c, uint8_t d )
 	{ return a + (b<<8) + (c<<16) + (d<<24); }
 
 unsigned convert32unsigned( const Buffer& b ){
-	assert( b.size() == 4 );
+	assert_eq( b.size(), 4u );
 	return convert32unsigned( b[0], b[1], b[2], b[3] );
 }
 
