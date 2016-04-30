@@ -20,6 +20,7 @@ class BufferReader{
 	public:
 		BufferReader( Buffer& buf ) : buffer(buf) { }
 		
+		auto tell() const{ return position; }
 		auto left() const{ return buffer.size() - position; }
 		
 		ArrayView makeView( unsigned from, unsigned amount ){
@@ -40,6 +41,11 @@ class BufferReader{
 		uint32_t read32u(){
 			auto b = read( 4 );
 			return convert32unsigned( b[0], b[1], b[2], b[3] );
+		}
+		
+		NotArrayView readName(){
+			auto lenght = read32u();
+			return { read( lenght ) };
 		}
 };
 

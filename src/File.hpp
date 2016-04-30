@@ -21,13 +21,23 @@ class File{
 			fread( buf.data(), 1, buf.size(), handle );
 		}
 		
-		int seek( long int offset, int origin )
+		auto seek( long int offset, int origin )
 			{ return fseek( handle, offset, origin ); }
+		
+		auto tell(){ return ftell( handle ); }
 		
 		Buffer read( size_t bytes ){
 			Buffer buf( bytes );
 			read( buf );
 			return buf;
+		}
+		
+		Buffer readAll() {
+			auto current = tell();
+			seek( 0, SEEK_END );
+			auto end = tell();
+			seek( current, 0 );
+			return read( end - current );
 		}
 };
 

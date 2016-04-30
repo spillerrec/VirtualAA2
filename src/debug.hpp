@@ -14,7 +14,7 @@ void assert_equals( const T1& a, const T2& b, const char* exp, const char* file,
 #endif
 }
 
-void always( bool always_true, const char* msg ){
+inline void always( bool always_true, const char* msg ){
 	if( !always_true )
 		throw std::runtime_error( msg );
 }

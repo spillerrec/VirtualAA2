@@ -26,7 +26,7 @@ class XXMesh{
 
 class XXFrame{
 	private:
-		ArrayView name;
+		NotArrayView name;
 		//Frames/children count
 		ArrayView header1;
 		//Submeshes count
@@ -42,7 +42,7 @@ class XXFrame{
 		
 	public:
 		XXFrame() { } //TODO: Avoid?
-		XXFrame( BufferReader& reader );
+		XXFrame( BufferReader& reader, int format );
 };
 
 class XXMaterial{
@@ -58,15 +58,16 @@ class XXModel{
 		Buffer data;
 		
 	//Data
-		ArrayView format;
-		ArrayView unknown1; //Some kind of header
+		uint32_t format;
+		uint8_t unknown1;
+		ArrayView unknown2; //Some kind of header
 		//Frame
-		ArrayView unknown2; //Supposedly related to materials
+		ArrayView unknown3; //Supposedly related to materials
 		//Material count
 		//[Materials]...
 		//Texture count
 		//[Textures]...
-		ArrayView unknown3; //A footer? Nah... can't be
+		ArrayView unknown4; //A footer? Nah... can't be
 	
 	public:
 		XXFrame frame;

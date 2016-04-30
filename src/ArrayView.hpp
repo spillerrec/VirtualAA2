@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 class ArrayView{
-	private:
+	protected:
 		uint8_t* data;
 		size_t lenght;
 		
@@ -20,6 +20,12 @@ class ArrayView{
 		
 		uint8_t* begin() { return data         ; }
 		uint8_t* end()   { return data + lenght; }
+};
+
+struct NotArrayView : public ArrayView {
+	NotArrayView() {}
+	NotArrayView( ArrayView view ) : ArrayView( view ) { }
+	uint8_t  operator[]( int index ) const { return ~(data[index]); } //TODO: Check in debug mode
 };
 
 #endif
