@@ -6,11 +6,18 @@
 #include "ArrayView.hpp"
 #include "Buffer.hpp"
 
+#include <algorithm>
 #include <vector>
 
 class File;
 class BufferReader; //TODO:
 class XXFrame;
+
+template<typename T>
+auto sumXXSize( const std::vector<T>& arr ){
+	return std::accumulate( arr.begin(), arr.end(), 0u
+		,	[](auto acc, auto t){ return t.size() + acc; } );
+}
 
 class XXMesh{
 	private:
@@ -26,6 +33,7 @@ class XXMesh{
 
 class XXFrame{
 	private:
+		//Name length
 		NotArrayView name;
 		//Frames/children count
 		ArrayView header1;
@@ -46,33 +54,55 @@ class XXFrame{
 };
 
 class XXMaterial{
-	//TODO:
+	private:
+		struct TextureRef{
+			//Name length
+			NotArrayView name;
+			ArrayView unknown;
+			
+			auto size() const{ return 4 + name.size() + unknown.size(); }
+		};
+		
+		//Name length
+		NotArrayView name;
+		ArrayView colors;
+		std::vector<TextureRef> textures;
+		ArrayView unknown;
+		
+	public:
+		XXMaterial( BufferReader& reader );
+		
+		auto size() const
+			{ return 4 + name.size() + colors.size() + sumXXSize( textures ) + unknown.size(); }
 };
 
 class XXTexture{
-	//TODO:
+	private:
+		//Name length
+		NotArrayView name;
+		ArrayView header;
+		//Data length
+		ArrayView data;
+		
+	public:
+		XXTexture( BufferReader& reader );
+		
+		auto size() const{ return 4 + name.size() + header.size() + 4 + data.size(); }
 };
 
 class XXModel{
 	private:
 		Buffer data;
-		
-	//Data
-		uint32_t format;
-		uint8_t unknown1;
-		ArrayView unknown2; //Some kind of header
-		//Frame
-		ArrayView unknown3; //Supposedly related to materials
-		//Material count
-		//[Materials]...
-		//Texture count
-		//[Textures]...
-		ArrayView unknown4; //A footer? Nah... can't be
 	
 	public:
+		ArrayView data_header;
 		XXFrame frame;
+		ArrayView unknown3; //Supposedly related to materials
+		//Material count
 		std::vector<XXMaterial> materials;
+		//Texture count
 		std::vector<XXTexture> textures;
+		ArrayView unknown4; //A footer? Nah... can't be
 		
 	public:
 		XXModel( Buffer file );

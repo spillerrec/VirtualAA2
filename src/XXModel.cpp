@@ -14,28 +14,56 @@ unsigned dupe_size = 0;
 
 XXModel::XXModel( Buffer file ) : data(std::move(file)) {
 	BufferReader reader( data );
-	format = reader.read32u();
+	
+//Read header
+	auto format = reader.read32u();
 	require( format <= 8 );
 	//TODO: validate properly
 	
-	unknown1 = reader.read8u();
-	unknown2 = reader.read( format >= 1 ? 21 : 16 );
+	/*auto unknown1 =*/ reader.read8u();
+	/*auto unknown2 =*/ reader.read( format >= 1 ? 21 : 16 );
+	
+	auto header_end = reader.tell();
+	data_header = reader.makeView( 0, header_end );
+	
+//Read frames
 	frame = XXFrame( reader, format );
 	
+//Read unknown
 	unknown3 = reader.read( 4 );
-	auto count = reader.read8u();
-	std::cout << "Material count: " << (int)count << std::endl;
-		std::cout << reader.tell() << std::endl;
-	std::cout << "Meshes take: " << mesh_size << std::endl;
-	std::cout << "Bones  take: " << bone_size << std::endl;
-	std::cout << "Dupes  take: " << dupe_size << std::endl;
+	
+//Read materials
+	auto material_count = reader.read32u();
+	materials.reserve( material_count );
+	for( unsigned i=0; i<material_count; i++ )
+		materials.emplace_back( reader );
+	
+//Read textures
+	auto texture_count = reader.read32u();
+	for( unsigned i=0; i<texture_count; i++ )
+		textures.emplace_back( reader );
+	
+//Read unknown
+	if( format >= 2 )
+		unknown4 = reader.read( 10 );
+	
+	require( reader.left() == 0 );
+	
+//Statistics
+	std::cout << "Header section:   " << data_header.size() << std::endl;
+//	std::cout << "Frame section:    " << data_frames.size() << std::endl;
+		std::cout << "\tMeshes take: " << mesh_size << std::endl;
+		std::cout << "\tBones  take: " << bone_size << std::endl;
+		std::cout << "\tDupes  take: " << dupe_size << std::endl;
+	std::cout << "Material section: " << sumXXSize( materials ) << std::endl;
+	std::cout << "Textures section: " << sumXXSize( textures ) << std::endl;
 }
 
 static void coutName( const char* prefix, NotArrayView view ){
-	std::cout << prefix;
+/*	std::cout << prefix;
 	for( unsigned i=0; i<view.size(); i++ )
 		std::cout << view[i];
-	std::cout << std::endl;
+	std::cout << std::endl;*/
 }
 
 XXFrame::XXFrame( BufferReader& reader, int format ){
@@ -88,7 +116,7 @@ XXFrame::XXFrame( BufferReader& reader, int format ){
 XXMesh::XXMesh( BufferReader& reader, int format, int vector2count ){
 	auto start = reader.tell();
 	unknown1 = reader.read( format >= 7 ? 64 : 16 );
-	std::cout << "Material index: " << reader.read32u() << std::endl;
+	index = reader.read32u();
 	
 	auto faces_count = reader.read32u();
 //	std::cout << "Faces: " << faces_count/3 << std::endl;
@@ -117,7 +145,29 @@ XXMesh::XXMesh( BufferReader& reader, int format, int vector2count ){
 	
 	auto end = reader.tell();
 	
-	std::cout << "Total mesh size: " << end-start << std::endl << std::endl;
 	mesh_size += end-start;
+}
+
+XXMaterial::XXMaterial( BufferReader& reader ){
+	name = reader.readName();
+	coutName( "Material: ", name );
+	colors = reader.read( 4*4 * 4 + 4 );
+	for( int i=0; i<4; i++ ){
+		TextureRef ref;
+		ref.name = reader.readName();
+		coutName( "Texture Ref: ", ref.name );
+		ref.unknown = reader.read( 16 );
+		textures.push_back( ref );
+	}
+	unknown = reader.read( 88 ); //TODO: format < 0 ?
+}
+
+XXTexture::XXTexture( BufferReader& reader ){
+	name = reader.readName();
+	coutName( "Texture: ", name );
+	header = reader.read( 8*4 + 1 );
+	
+	auto length = reader.read32u();
+	data = reader.read( length );
 }
 
