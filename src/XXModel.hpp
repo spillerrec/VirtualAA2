@@ -77,7 +77,7 @@ class XXMaterial{
 };
 
 class XXTexture{
-	private:
+	public:
 		//Name length
 		NotArrayView name;
 		ArrayView header;

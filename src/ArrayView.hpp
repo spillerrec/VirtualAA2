@@ -4,6 +4,7 @@
 #define ARRAY_VIEW_HPP
 
 #include <stdint.h>
+#include <string>
 
 class ArrayView{
 	protected:
@@ -26,6 +27,8 @@ struct NotArrayView : public ArrayView {
 	NotArrayView() {}
 	NotArrayView( ArrayView view ) : ArrayView( view ) { }
 	uint8_t  operator[]( int index ) const { return ~(data[index]); } //TODO: Check in debug mode
+	
+	std::string toString() const;
 };
 
 #endif
