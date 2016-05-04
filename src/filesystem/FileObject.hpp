@@ -30,6 +30,8 @@ class FileObject{
 		
 		virtual uint64_t children() const{ return 0; }
 		virtual const FileObject& operator[]( int index ) const{ throw std::domain_error( "No children defined!" ); }
+		
+		virtual ~FileObject() { }
 };
 
 #endif
