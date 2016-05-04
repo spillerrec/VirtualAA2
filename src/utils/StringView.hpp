@@ -1,0 +1,31 @@
+/*	This file is part of VirtualAA2, which is free software and is licensed
+ * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
+#ifndef STRING_VIEW_HPP
+#define STRING_VIEW_HPP
+
+#include "ArrayView.hpp"
+
+#include <algorithm>
+#include <vector>
+
+using StringView = ArrayView<const char>;
+using WStringView = ArrayView<const wchar_t>;
+
+inline WStringView makeView( const wchar_t* null_terminated )
+	{ return { null_terminated, std::char_traits<wchar_t>::length( null_terminated ) }; }
+
+template<typename T>
+std::vector<ArrayView<T>> split( ArrayView<T> view, T split_on ){
+	std::vector<ArrayView<T>> out;
+	
+	auto pos = view.begin();
+	while( pos < view.end() ){
+		auto new_pos = std::find( pos, view.end(), split_on );
+		out.emplace_back( pos, new_pos - pos );
+		pos = new_pos + 1;
+	}
+	
+	return out;
+}
+
+#endif

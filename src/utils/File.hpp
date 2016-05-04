@@ -12,9 +12,8 @@ class File{
 		FILE* handle;
 	
 	public:
-		File( const char* filepath ) : handle( std::fopen( filepath, "rb" ) ) {
-			//TODO: throw on (handle == nullptr)
-		}
+		File( const char* filepath, const char* flags="rb" );
+		File( const wchar_t* filepath, const wchar_t* flags=L"rb" );
 		~File(){ std::fclose( handle ); }
 		
 		void read( Buffer& buf ){

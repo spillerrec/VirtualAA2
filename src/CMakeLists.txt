@@ -11,14 +11,20 @@ set(SOURCES_DECODERS
 	decoders/XXModel.cpp
 	)
 
-set(SOURCES_UTILS
-	utils/ArrayView.cpp
+set(SOURCES_FILESYSTEM
+	filesystem/PassthroughDir.cpp
+	filesystem/PassthroughFile.cpp
 	)
 
-# add_executable(testing ${SOURCES_DECODERS} ${SOURCES_UTILS} main.cpp)
+set(SOURCES_UTILS
+	utils/ArrayView.cpp
+	utils/File.cpp
+	)
+
+# add_executable(testing ${SOURCES_DECODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} main.cpp)
 
 ADD_DEFINITIONS(-DUNICODE)
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode" )
 
-add_executable(VirtualAA2 ${SOURCES_DECODERS} ${SOURCES_UTILS} main-dokan.cpp)
+add_executable(VirtualAA2 ${SOURCES_DECODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} main-dokan.cpp)
 target_link_libraries(VirtualAA2 -ldokan1)
