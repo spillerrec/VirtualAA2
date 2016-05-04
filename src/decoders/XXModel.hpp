@@ -3,8 +3,8 @@
 #ifndef XX_MODEL_HPP
 #define XX_MODEL_HPP
 
-#include "ArrayView.hpp"
-#include "Buffer.hpp"
+#include "../utils/ArrayView.hpp"
+#include "../utils/Buffer.hpp"
 
 #include <algorithm>
 #include <vector>

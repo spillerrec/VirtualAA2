@@ -3,8 +3,8 @@
 
 #include "XXModel.hpp"
 
-#include "BufferReader.hpp"
-#include "debug.hpp"
+#include "../utils/BufferReader.hpp"
+#include "../utils/debug.hpp"
 
 #include <iostream>
 

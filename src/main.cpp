@@ -1,9 +1,9 @@
 /*	This file is part of VirtualAA2, which is free software and is licensed
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
-#include "PPArchive.hpp"
-#include "XXModel.hpp"
-#include "File.hpp"
+#include "decoders/PPArchive.hpp"
+#include "decoders/XXModel.hpp"
+#include "utils/File.hpp"
 
 #include <string>
 

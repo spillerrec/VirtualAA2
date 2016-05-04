@@ -2,9 +2,9 @@
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
 #include "PPArchive.hpp"
-#include "BufferReader.hpp"
-#include "File.hpp"
-#include "debug.hpp"
+#include "../utils/BufferReader.hpp"
+#include "../utils/File.hpp"
+#include "../utils/debug.hpp"
 
 #include <cstdio>
 
