@@ -23,12 +23,12 @@ class BufferReader{
 		auto tell() const{ return position; }
 		auto left() const{ return buffer.size() - position; }
 		
-		ArrayView makeView( unsigned from, unsigned amount ){
+		ByteView makeView( unsigned from, unsigned amount ){
 			require( from+amount <= buffer.size() );
-			return ArrayView( buffer.begin() + from, amount );
+			return ByteView( buffer.begin() + from, amount );
 		}
 		
-		ArrayView read( unsigned amount ){
+		ByteView read( unsigned amount ){
 			position += amount;
 			return makeView( position - amount, amount );
 		}
@@ -48,7 +48,7 @@ class BufferReader{
 			return convert32unsigned( b[0], b[1], b[2], b[3] );
 		}
 		
-		NotArrayView readName(){
+		NotByteView readName(){
 			auto lenght = read32u();
 			return { read( lenght ) };
 		}

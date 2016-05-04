@@ -6,26 +6,29 @@
 #include <stdint.h>
 #include <string>
 
+template<typename T>
 class ArrayView{
 	protected:
-		uint8_t* data;
+		T* data;
 		size_t lenght;
 		
 	public:
 		ArrayView() : data(nullptr), lenght(0) {} //TODO: remove?
-		ArrayView( uint8_t* data, size_t lenght ) : data(data), lenght(lenght) { }
+		ArrayView( T* data, size_t lenght ) : data(data), lenght(lenght) { }
 		
 		auto size() const{ return lenght; }
-		uint8_t& operator[]( int index )       { return data[index]; } //TODO: Check in debug mode
-		uint8_t  operator[]( int index ) const { return data[index]; } //TODO: Check in debug mode
+		T& operator[]( int index )       { return data[index]; } //TODO: Check in debug mode
+		T  operator[]( int index ) const { return data[index]; } //TODO: Check in debug mode
 		
-		uint8_t* begin() { return data         ; }
-		uint8_t* end()   { return data + lenght; }
+		T* begin() { return data         ; }
+		T* end()   { return data + lenght; }
 };
 
-struct NotArrayView : public ArrayView {
-	NotArrayView() {}
-	NotArrayView( ArrayView view ) : ArrayView( view ) { }
+using ByteView = ArrayView<uint8_t>;
+
+struct NotByteView : public ByteView {
+	NotByteView() {}
+	NotByteView( ByteView view ) : ByteView( view ) { }
 	uint8_t  operator[]( int index ) const { return ~(data[index]); } //TODO: Check in debug mode
 	
 	std::string toString() const;

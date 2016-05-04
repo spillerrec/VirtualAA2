@@ -21,11 +21,11 @@ auto sumXXSize( const std::vector<T>& arr ){
 
 class XXMesh{
 	private:
-		ArrayView unknown1;
+		ByteView unknown1;
 		int index; //Material index
-		ArrayView faces;
-		ArrayView vertexes;
-		ArrayView unknown2; //Use name at end?
+		ByteView faces;
+		ByteView vertexes;
+		ByteView unknown2; //Use name at end?
 		
 	public:
 		XXMesh( BufferReader& reader, int format, int vector2count );
@@ -34,14 +34,14 @@ class XXMesh{
 class XXFrame{
 	private:
 		//Name length
-		NotArrayView name;
+		NotByteView name;
 		//Frames/children count
-		ArrayView header1;
+		ByteView header1;
 		//Submeshes count
-		ArrayView header2;
+		ByteView header2;
 		//[Submeshes]...
-		ArrayView vertice_dupes; //Donno
-		ArrayView bones;
+		ByteView vertice_dupes; //Donno
+		ByteView bones;
 		//[XXFrame]...
 	
 	public:
@@ -57,17 +57,17 @@ class XXMaterial{
 	private:
 		struct TextureRef{
 			//Name length
-			NotArrayView name;
-			ArrayView unknown;
+			NotByteView name;
+			ByteView unknown;
 			
 			auto size() const{ return 4 + name.size() + unknown.size(); }
 		};
 		
 		//Name length
-		NotArrayView name;
-		ArrayView colors;
+		NotByteView name;
+		ByteView colors;
 		std::vector<TextureRef> textures;
-		ArrayView unknown;
+		ByteView unknown;
 		
 	public:
 		XXMaterial( BufferReader& reader );
@@ -79,10 +79,10 @@ class XXMaterial{
 class XXTexture{
 	public:
 		//Name length
-		NotArrayView name;
-		ArrayView header;
+		NotByteView name;
+		ByteView header;
 		//Data length
-		ArrayView data;
+		ByteView data;
 		
 	public:
 		XXTexture( BufferReader& reader );
@@ -95,14 +95,14 @@ class XXModel{
 		Buffer data;
 	
 	public:
-		ArrayView data_header;
+		ByteView data_header;
 		XXFrame frame;
-		ArrayView unknown3; //Supposedly related to materials
+		ByteView unknown3; //Supposedly related to materials
 		//Material count
 		std::vector<XXMaterial> materials;
 		//Texture count
 		std::vector<XXTexture> textures;
-		ArrayView unknown4; //A footer? Nah... can't be
+		ByteView unknown4; //A footer? Nah... can't be
 		
 	public:
 		XXModel( Buffer file );

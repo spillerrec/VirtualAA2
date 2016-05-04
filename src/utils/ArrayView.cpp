@@ -6,7 +6,7 @@
 #include "Buffer.hpp"
 #include "debug.hpp"
 
-std::string NotArrayView::toString() const{
+std::string NotByteView::toString() const{
 	Buffer buf( size() );
 	for( unsigned i=0; i<size(); i++ )
 		buf[i] = (*this)[i];

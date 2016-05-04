@@ -59,7 +59,7 @@ XXModel::XXModel( Buffer file ) : data(std::move(file)) {
 	std::cout << "Textures section: " << sumXXSize( textures ) << std::endl;
 }
 
-static void coutName( const char* prefix, NotArrayView view ){
+static void coutName( const char* prefix, NotByteView view ){
 /*	std::cout << prefix;
 	for( unsigned i=0; i<view.size(); i++ )
 		std::cout << view[i];
