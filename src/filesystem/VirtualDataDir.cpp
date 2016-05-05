@@ -7,10 +7,23 @@
 #include "PassthroughDir.hpp"
 #include "../utils/debug.hpp"
 
+#include <algorithm>
+#include <cwctype>
+
+using namespace std;
+
 VirtualDataDir::VirtualDataDir( std::wstring filepath )
 	:	basedir( std::make_unique<PassthroughDir>( filepath ) )
 {
 	
+}
+
+static bool compareInsensitive( WStringView a, WStringView b ){
+	if( a.size() != b.size() )
+		return false;
+	return equal( a.begin(), a.end(), b.begin()
+		,	[]( auto a, auto b ){ return towlower(a) == towlower(b); }
+		);
 }
 
 const FileObject* VirtualDataDir::getFromPath( FilePath path ){
@@ -24,7 +37,7 @@ const FileObject* VirtualDataDir::getFromPath( FilePath path ){
 		
 		const FileObject* found = nullptr;
 		for( unsigned j=0; j<current->children(); j++ )
-			if( (*current)[j].name() == currentpath ){
+			if( compareInsensitive( (*current)[j].name(), currentpath ) ){
 				found = &(*current)[j];
 				break;
 			}
