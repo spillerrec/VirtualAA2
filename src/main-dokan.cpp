@@ -21,6 +21,13 @@ static void print( WStringView str ){
 		std::wcout << wc;
 }
 
+static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
+	LARGE_INTEGER large;
+	large.QuadPart = filesize;
+	high = large.HighPart;
+	low  = large.LowPart;
+}
+
 struct FilePath{
 	std::vector<WStringView> path;
 	
@@ -34,22 +41,14 @@ struct FilePath{
 namespace VirtualAA2{
 
 NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT, ACCESS_MASK DesiredAccess, ULONG FileAttributes, ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions, PDOKAN_FILE_INFO file_info ){
-	std::wcout << "CreateFile: " << filename << std::endl;
+	auto dir = data_dir->getFromPath( { filename } );
+	if( !dir )
+		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
-	FilePath path( filename );
-	require( path.hasRoot() );
-	
-/*	for( auto part : path.path ){
-		std::cout << "\t";
-		print( part );
-		std::cout << "\n";
-	}
-	*/
 	if( ! (DesiredAccess & (FILE_READ_DATA | FILE_READ_ATTRIBUTES ) ) )
 		return STATUS_ACCESS_VIOLATION;
-//	std::cout << "OK\n";
 	
-	file_info->IsDirectory = true;
+	file_info->IsDirectory = dir->isDir();
 	
 	return STATUS_SUCCESS;
 }
@@ -61,16 +60,19 @@ NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_t
 }
 
 NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_INFORMATION info, PDOKAN_FILE_INFO file_info ){
+	auto dir = data_dir->getFromPath( { filename } );
+	if( !dir )
+		return STATUS_OBJECT_NAME_NOT_FOUND;
+	
 //	std::wcout << L"GetFileInformation: " << filename << std::endl;
 	
-	info->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+	info->dwFileAttributes = dir->isDir() ? FILE_ATTRIBUTE_DIRECTORY : 0;
 	
 	info->ftCreationTime   = { 0 };
 	info->ftLastAccessTime = { 0 };
 	info->ftLastWriteTime  = { 0 };
 	
-	info->nFileSizeHigh = 0;
-	info->nFileSizeLow = 0;
+	setFileSize( info->nFileSizeHigh, info->nFileSizeLow, dir->filesize() );
 	
 	//For files: FILE_ATTRIBUTE_READONLY
 	
@@ -87,7 +89,7 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 		
 		WIN32_FIND_DATA file = { 0 };
 		file.dwFileAttributes = child.isDir() ? FILE_ATTRIBUTE_DIRECTORY : 0;
-		//file.nFileSizeLow = 400;
+		setFileSize( file.nFileSizeHigh, file.nFileSizeLow, child.filesize() );
 		
 		auto name = child.name();
 		require( name.size() < MAX_PATH );

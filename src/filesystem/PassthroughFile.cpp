@@ -18,7 +18,7 @@ WStringView PassthroughFile::name() const{
 	
 uint64_t PassthroughFile::filesize() const{
 	__stat64 stat = { 0 };
-	if( _wstat64( filepath.c_str(), &stat ) )
+	if( _wstat64( filepath.c_str(), &stat ) == 0 )
 		return stat.st_size;
 	else
 		return 0;
