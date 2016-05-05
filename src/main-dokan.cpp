@@ -104,7 +104,7 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 
 int wmain( int argc, wchar_t* argv[] ){
 	if( argc < 2 ){
-		std::cout << "VirtualAA2 <path-to-aa2-data-dir>\n";
+		std::cout << "VirtualAA2 <path-to-aa2-data-dir> [mount-point]\n";
 		return -1;
 	}
 	auto data_dir_path = argv[1];
@@ -113,7 +113,7 @@ int wmain( int argc, wchar_t* argv[] ){
 	options.Version = 100;
 	options.ThreadCount = 1; //TODO: for now
 	//options.GlobalContext = 0;
-	options.MountPoint = L"v";
+	options.MountPoint = argc < 3 ? L"v" : argv[2];
 	
 	data_dir = std::make_unique<VirtualDataDir>( data_dir_path );
 	
