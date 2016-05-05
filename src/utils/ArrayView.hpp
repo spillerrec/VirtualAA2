@@ -3,6 +3,7 @@
 #ifndef ARRAY_VIEW_HPP
 #define ARRAY_VIEW_HPP
 
+#include <algorithm>
 #include <stdint.h>
 #include <string>
 
@@ -20,8 +21,17 @@ class ArrayView{
 		T& operator[]( int index )       { return data[index]; } //TODO: Check in debug mode
 		T  operator[]( int index ) const { return data[index]; } //TODO: Check in debug mode
 		
-		T* begin() { return data         ; }
-		T* end()   { return data + lenght; }
+		T* begin()       { return data         ; }
+		T* begin() const { return data         ; }
+		T* end()         { return data + lenght; }
+		T* end()   const { return data + lenght; }
+		
+		bool operator==( ArrayView<T> other ) const{
+			if( size() != other.size() )
+				return false;
+			
+			return std::equal( begin(), end(), other.begin() );
+		}
 };
 
 using ByteView = ArrayView<uint8_t>;

@@ -14,6 +14,7 @@ set(SOURCES_DECODERS
 set(SOURCES_FILESYSTEM
 	filesystem/PassthroughDir.cpp
 	filesystem/PassthroughFile.cpp
+	filesystem/VirtualDataDir.cpp
 	)
 
 set(SOURCES_UTILS

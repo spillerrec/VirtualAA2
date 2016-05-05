@@ -12,7 +12,9 @@ extern "C"{
 #include "utils/debug.hpp"
 #include "utils/StringView.hpp"
 
-#include "filesystem/PassthroughDir.hpp"
+#include "filesystem/VirtualDataDir.hpp"
+
+std::unique_ptr<VirtualDataDir> data_dir;
 
 static void print( WStringView str ){
 	for( auto wc : str )
@@ -76,31 +78,24 @@ NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_I
 }
 
 NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FILE_INFO file_info ){
-	std::cout << "FindFiles\n";
+	auto dir = data_dir->getFromPath( { path } );
+	if( !dir )
+		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
-	FilePath filepath( path );
-	std::wstring sub = filepath.isRoot() ? L"" : std::wstring(path);
-	PassthroughDir dir( std::wstring(L"aa2dir\\data") + sub );
-	
-	std::cout << "Children: " << dir.children() << "\n";
-	for( uint64_t i=0; i<dir.children(); i++ ){
-		auto& child = dir[i];
-		auto name = child.name();
-		std::wcout << "Adding child: ";
-		//print( name );
-		std::wcout << "\n";
-		require( name.size() < MAX_PATH );
+	for( uint64_t i=0; i<dir->children(); i++ ){
+		auto& child = (*dir)[i];
 		
 		WIN32_FIND_DATA file = { 0 };
 		file.dwFileAttributes = child.isDir() ? FILE_ATTRIBUTE_DIRECTORY : 0;
 		//file.nFileSizeLow = 400;
 		
-		for( unsigned j=0; j<name.size(); j++ ){
+		auto name = child.name();
+		require( name.size() < MAX_PATH );
+		for( unsigned j=0; j<name.size(); j++ )
 			file.cFileName[j] = name[j];
-		}
 		
-		auto result = insert( &file, file_info );
-		//if( result != 0 ) //Some error
+		if( insert( &file, file_info ) != 0 )
+			return STATUS_INTERNAL_ERROR;
 	}
 	
 	return STATUS_SUCCESS;
@@ -108,11 +103,19 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 }
 
 int wmain( int argc, wchar_t* argv[] ){
+	if( argc < 2 ){
+		std::cout << "VirtualAA2 <path-to-aa2-data-dir>\n";
+		return -1;
+	}
+	auto data_dir_path = argv[1];
+	
 	_DOKAN_OPTIONS options = { 0 };
 	options.Version = 100;
 	options.ThreadCount = 1; //TODO: for now
 	//options.GlobalContext = 0;
 	options.MountPoint = L"v";
+	
+	data_dir = std::make_unique<VirtualDataDir>( data_dir_path );
 	
 	_DOKAN_OPERATIONS func = { 0 };
 	
