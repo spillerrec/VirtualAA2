@@ -12,31 +12,23 @@ extern "C"{
 #include "utils/debug.hpp"
 #include "utils/StringView.hpp"
 
+#include "filesystem/FilePath.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 
 std::unique_ptr<VirtualDataDir> data_dir;
 
-static void print( WStringView str ){
-	for( auto wc : str )
-		std::wcout << wc;
-}
-
 static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
-	LARGE_INTEGER large;
+	ULARGE_INTEGER large;
 	large.QuadPart = filesize;
 	high = large.HighPart;
 	low  = large.LowPart;
 }
 
-struct FilePath{
-	std::vector<WStringView> path;
-	
-	FilePath( WStringView filepath ) : path( split<const wchar_t>( filepath, L'\\' ) ) { }
-	FilePath( LPCWSTR filepath ) : FilePath( makeView( filepath ) ) { }
-	
-	bool hasRoot() const{ return path.size() > 0 && path[0].size() == 0; }
-	bool isRoot() const{ return hasRoot() && path.size() == 1; }
-};
+ULONG64 handleToContext( FILE* handle )
+	{ return reinterpret_cast<ULONG64>( handle ); }
+
+FILE* contextToHandle( ULONG64 context )
+	{ return reinterpret_cast<FILE*>( context ); }
 
 namespace VirtualAA2{
 
@@ -45,28 +37,60 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
-	if( ! (DesiredAccess & (FILE_READ_DATA | FILE_READ_ATTRIBUTES ) ) )
+//A long range of access checks
+	/*
+	if( DesiredAccess & (FILE_READ_EA | FILE_EXECUTE) ){
+		std::wcout << "Unknown access wanted for: " << filename << "\n";
+		return STATUS_NOT_IMPLEMENTED;
+	}
+	*/
+	
+	if( DesiredAccess & (FILE_WRITE_DATA) && !dir->canWrite() ){
+		std::wcout << "Write not allowed for: " << filename << "\n";
 		return STATUS_ACCESS_VIOLATION;
+	}
+	
+	if( DesiredAccess & (FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES) ){
+		std::wcout << "Attribute changes not implemented: " << filename;
+		return STATUS_NOT_IMPLEMENTED;
+	}
+	
+	if( DesiredAccess & FILE_APPEND_DATA  ){
+		std::wcout << "Append write not implemented: " << filename;
+		return STATUS_NOT_IMPLEMENTED; //TODO:
+	}
 	
 	file_info->IsDirectory = dir->isDir();
+	
+	if( !dir->isDir() ){
+		if( DesiredAccess & FILE_READ_DATA ){
+			std::wcout << "Creating handle for: " << filename << "\n";
+			file_info->Context = handleToContext( dir->openRead() );
+		}
+	}
 	
 	return STATUS_SUCCESS;
 }
 
 
-NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_to_read, LPDWORD bytes_read, LONGLONG offset, PDOKAN_FILE_INFO ){
-//	std::cout << "ReadFile\n";
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_INFORMATION info, PDOKAN_FILE_INFO file_info ){
+NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_to_read, LPDWORD bytes_read, LONGLONG offset, PDOKAN_FILE_INFO file_info ){
 	auto dir = data_dir->getFromPath( { filename } );
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
-//	std::wcout << L"GetFileInformation: " << filename << std::endl;
+	*bytes_read = dir->read( contextToHandle( file_info->Context ), static_cast<uint8_t*>(buffer), bytes_to_read, offset );
+	std::wcout << "ReadFile: " << filename << "\n";
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_INFORMATION info, PDOKAN_FILE_INFO file_info ){
+	auto dir = data_dir->getFromPath( { filename } );
+	if( !dir ){
+		std::wcout << filename << "\n";
+		return STATUS_OBJECT_NAME_NOT_FOUND;
+	}
 	
-	info->dwFileAttributes = dir->isDir() ? FILE_ATTRIBUTE_DIRECTORY : 0;
+	info->dwFileAttributes = dir->isDir() ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 	
 	info->ftCreationTime   = { 0 };
 	info->ftLastAccessTime = { 0 };
@@ -88,7 +112,7 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 		auto& child = (*dir)[i];
 		
 		WIN32_FIND_DATA file = { 0 };
-		file.dwFileAttributes = child.isDir() ? FILE_ATTRIBUTE_DIRECTORY : 0;
+		file.dwFileAttributes = child.isDir() ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 		setFileSize( file.nFileSizeHigh, file.nFileSizeLow, child.filesize() );
 		
 		auto name = child.name();
@@ -102,6 +126,25 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 	
 	return STATUS_SUCCESS;
 }
+
+void DOKAN_CALLBACK Cleanup( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
+	auto dir = data_dir->getFromPath( { filename } );
+	if( !dir )
+		return;
+	
+	if( file_info->Context != 0 ){
+		std::wcout << "Removing handle for: " << filename << "\n";
+		dir->close( contextToHandle( file_info->Context ) );
+		file_info->Context = 0;
+	}
+}
+
+
+
+void DOKAN_CALLBACK CloseFile( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
+	Cleanup( filename, file_info );
+}
+
 }
 
 int wmain( int argc, wchar_t* argv[] ){
@@ -126,6 +169,8 @@ int wmain( int argc, wchar_t* argv[] ){
 	func.ReadFile = ReadFile;
 	func.GetFileInformation = GetFileInformation;
 	func.FindFiles = FindFiles;
+	func.Cleanup = Cleanup;
+	func.CloseFile = CloseFile;
 	
 	auto result = DokanMain( &options, &func );
 	if( result != 0 ){
