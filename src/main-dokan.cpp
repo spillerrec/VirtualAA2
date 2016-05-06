@@ -33,6 +33,7 @@ FILE* contextToHandle( ULONG64 context )
 namespace VirtualAA2{
 
 NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT, ACCESS_MASK DesiredAccess, ULONG FileAttributes, ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions, PDOKAN_FILE_INFO file_info ){
+	bool read_only = true;
 	auto dir = data_dir->getFromPath( { filename } );
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -45,27 +46,32 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 	}
 	*/
 	
-	if( DesiredAccess & (FILE_WRITE_DATA) && !dir->canWrite() ){
+	if( DesiredAccess & (FILE_WRITE_DATA) && (!dir->canWrite() || read_only) ){
 		std::wcout << "Write not allowed for: " << filename << "\n";
 		return STATUS_ACCESS_VIOLATION;
 	}
 	
+	/*
 	if( DesiredAccess & (FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES) ){
 		std::wcout << "Attribute changes not implemented: " << filename;
 		return STATUS_NOT_IMPLEMENTED;
 	}
-	
-	if( DesiredAccess & FILE_APPEND_DATA  ){
-		std::wcout << "Append write not implemented: " << filename;
-		return STATUS_NOT_IMPLEMENTED; //TODO:
-	}
+	*/
 	
 	file_info->IsDirectory = dir->isDir();
 	
 	if( !dir->isDir() ){
 		if( DesiredAccess & FILE_READ_DATA ){
-			std::wcout << "Creating handle for: " << filename << "\n";
+			std::wcout << "Creating read handle for: " << filename << "\n";
 			file_info->Context = handleToContext( dir->openRead() );
+		}
+		else if( DesiredAccess & FILE_WRITE_DATA ){
+			std::wcout << "Creating write handle for: " << filename << "\n";
+			file_info->Context = handleToContext( dir->openWrite() );
+		}
+		else if( DesiredAccess & FILE_APPEND_DATA ){
+			std::wcout << "Creating append handle for: " << filename << "\n";
+			file_info->Context = handleToContext( dir->openAppend() );
 		}
 	}
 	
@@ -79,16 +85,25 @@ NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_t
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
 	*bytes_read = dir->read( contextToHandle( file_info->Context ), static_cast<uint8_t*>(buffer), bytes_to_read, offset );
-	std::wcout << "ReadFile: " << filename << "\n";
+	std::wcout << "ReadFile: " << filename << " - " << bytes_to_read << "\n";
 	return STATUS_SUCCESS;
 }
 
+NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes_to_write, LPDWORD bytes_written, LONGLONG offset, PDOKAN_FILE_INFO file_info ){
+	auto dir = data_dir->getFromPath( { filename } );
+	if( !dir )
+		return STATUS_OBJECT_NAME_NOT_FOUND;
+	
+	*bytes_written = dir->write( contextToHandle( file_info->Context ), static_cast<const uint8_t*>(buffer), bytes_to_write, offset );
+	std::wcout << "WriteFile: " /*<< filename */<< "\n";
+	return STATUS_SUCCESS;
+}
+
+
 NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_INFORMATION info, PDOKAN_FILE_INFO file_info ){
 	auto dir = data_dir->getFromPath( { filename } );
-	if( !dir ){
-		std::wcout << filename << "\n";
+	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
-	}
 	
 	info->dwFileAttributes = dir->isDir() ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 	
@@ -133,7 +148,7 @@ void DOKAN_CALLBACK Cleanup( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
 		return;
 	
 	if( file_info->Context != 0 ){
-		std::wcout << "Removing handle for: " << filename << "\n";
+//		std::wcout << "Removing handle for: " << filename << "\n";
 		dir->close( contextToHandle( file_info->Context ) );
 		file_info->Context = 0;
 	}

@@ -26,7 +26,9 @@ class PassthroughDir : public FileObject{
 		
 		FileHandle openRead() const override{ return nullptr; }
 		FileHandle openWrite() const override{ return nullptr; }
-		uint64_t read( FileHandle handle, uint8_t* buffer, uint64_t amount, uint64_t offset ) const override{ return 0; }
+		FileHandle openAppend() const override{ return nullptr; }
+		uint64_t read(  FileHandle handle,       uint8_t* buffer, uint64_t amount, uint64_t offset ) const override{ return 0; }
+		uint64_t write( FileHandle handle, const uint8_t* buffer, uint64_t amount, uint64_t offset ) const override{ return 0; }
 		void close( FileHandle handle ) const override { }
 		
 		uint64_t children() const override{ return objects.size(); }

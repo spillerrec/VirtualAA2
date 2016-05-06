@@ -31,10 +31,18 @@ FileHandle PassthroughFile::openRead() const{
 FileHandle PassthroughFile::openWrite() const{
 	return _wfopen( filepath.c_str(), L"wb" );
 }
+FileHandle PassthroughFile::openAppend() const{
+	return _wfopen( filepath.c_str(), L"ab" );
+}
 
 uint64_t PassthroughFile::read( FileHandle handle, uint8_t* buffer, uint64_t amount, uint64_t offset ) const{
 	fseek( handle, offset, 0 );
 	return fread( buffer, 1, amount, handle );
+}
+
+uint64_t PassthroughFile::write( FileHandle handle, const uint8_t* buffer, uint64_t amount, uint64_t offset ) const{
+	fseek( handle, offset, 0 );
+	return fwrite( buffer, 1, amount, handle );
 }
 
 void PassthroughFile::close( FileHandle handle ) const{
