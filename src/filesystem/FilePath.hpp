@@ -13,6 +13,14 @@ struct FilePath{
 	
 	bool hasRoot() const{ return path.size() > 0 && path[0].size() == 0; }
 	bool isRoot() const{ return hasRoot() && path.size() == 1; }
+	
+	auto filename() const{ return path.back(); }
+	std::wstring folderPath() const{
+		std::wstring out = path[0].toBasicString();
+		for( unsigned i=1; i<path.size()-1; i++ )
+			out += L"\\" + path[i].toBasicString();
+		return out;
+	}
 };
 
 #endif

@@ -3,19 +3,25 @@
 
 #include "VirtualDataDir.hpp"
 
+#include "FileSystem.hpp"
 #include "FilePath.hpp"
 #include "PassthroughDir.hpp"
 #include "../utils/debug.hpp"
+#include "../encoders/PPCompactor.hpp"
 
 #include <algorithm>
 #include <cwctype>
 
 using namespace std;
 
+
 VirtualDataDir::VirtualDataDir( std::wstring filepath )
 	:	basedir( std::make_unique<PassthroughDir>( filepath ) )
 {
-	
+	auto imports = getFolders( filepath + L"\\import" );
+	for( auto import : imports ){
+		PPCompactor::importPP( filepath + L"\\import\\" + import );
+	}
 }
 
 static bool compareInsensitive( WStringView a, WStringView b ){

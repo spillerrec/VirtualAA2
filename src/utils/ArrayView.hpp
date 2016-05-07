@@ -4,6 +4,8 @@
 #define ARRAY_VIEW_HPP
 
 #include <algorithm>
+#include <memory>
+#include <type_traits>
 #include <stdint.h>
 #include <string>
 
@@ -16,6 +18,8 @@ class ArrayView{
 	public:
 		ArrayView() : data(nullptr), lenght(0) {} //TODO: remove?
 		ArrayView( T* data, size_t lenght ) : data(data), lenght(lenght) { }
+		
+		using type = typename std::remove_cv<T>::type;
 		
 		auto size() const{ return lenght; }
 		T& operator[]( int index )       { return data[index]; } //TODO: Check in debug mode
@@ -32,6 +36,13 @@ class ArrayView{
 			
 			return std::equal( begin(), end(), other.begin() );
 		}
+		
+		std::basic_string<type> toBasicString() const{
+			auto buf = std::make_unique<type[]>( size() );
+			for( unsigned i=0; i<size(); i++ )
+				buf[i] = (*this)[i];
+			return std::basic_string<type>( buf.get(), size() );
+		}
 };
 
 using ByteView = ArrayView<uint8_t>;
@@ -43,5 +54,7 @@ struct NotByteView : public ByteView {
 	
 	std::string toString() const;
 };
+
+
 
 #endif
