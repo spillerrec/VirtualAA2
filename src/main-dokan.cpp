@@ -24,11 +24,40 @@ static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
 	low  = large.LowPart;
 }
 
-ULONG64 handleToContext( FILE* handle )
+struct PersistentFileObject{
+	public:
+		const FileObject* object;
+		FILE* handle{ 0 };
+	
+	private:
+		PersistentFileObject( const FileObject* object ) : object(object) { }
+	
+	public:
+		static PersistentFileObject* createReadAccess( const FileObject& dir ){
+			auto file = new PersistentFileObject( &dir );
+			file->handle = dir.openRead();
+			return file;
+		}
+		
+		static PersistentFileObject* createWriteAccess( const FileObject& dir ){
+			auto file = new PersistentFileObject( &dir );
+			file->handle = dir.openWrite();
+			return file;
+		}
+		
+		static PersistentFileObject* createAppendAccess( const FileObject& dir ){
+			auto file = new PersistentFileObject( &dir );
+			file->handle = dir.openAppend();
+			return file;
+		}
+};
+
+ULONG64 handleToContext( PersistentFileObject* handle )
 	{ return reinterpret_cast<ULONG64>( handle ); }
 
-FILE* contextToHandle( ULONG64 context )
-	{ return reinterpret_cast<FILE*>( context ); }
+PersistentFileObject* contextToHandle( ULONG64 context )
+	{ return reinterpret_cast<PersistentFileObject*>( context ); }
+
 
 namespace VirtualAA2{
 
@@ -63,15 +92,15 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 	if( !dir->isDir() ){
 		if( DesiredAccess & FILE_READ_DATA ){
 			std::wcout << "Creating read handle for: " << filename << "\n";
-			file_info->Context = handleToContext( dir->openRead() );
+			file_info->Context = handleToContext( PersistentFileObject::createReadAccess( *dir ) );
 		}
 		else if( DesiredAccess & FILE_WRITE_DATA ){
 			std::wcout << "Creating write handle for: " << filename << "\n";
-			file_info->Context = handleToContext( dir->openWrite() );
+			file_info->Context = handleToContext( PersistentFileObject::createWriteAccess( *dir ) );
 		}
 		else if( DesiredAccess & FILE_APPEND_DATA ){
 			std::wcout << "Creating append handle for: " << filename << "\n";
-			file_info->Context = handleToContext( dir->openAppend() );
+			file_info->Context = handleToContext( PersistentFileObject::createAppendAccess( *dir ) );
 		}
 	}
 	
@@ -80,21 +109,31 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 
 
 NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_to_read, LPDWORD bytes_read, LONGLONG offset, PDOKAN_FILE_INFO file_info ){
-	auto dir = data_dir->getFromPath( { filename } );
-	if( !dir )
-		return STATUS_OBJECT_NAME_NOT_FOUND;
+	auto file = contextToHandle( file_info->Context );
+	if( !file ){
+		std::cout << "Read handle was missing, re-creating it\n";
+		auto dir = data_dir->getFromPath( { filename } );
+		if( !dir )
+			return STATUS_OBJECT_NAME_NOT_FOUND;
+		file = PersistentFileObject::createReadAccess( *dir );
+	}
 	
-	*bytes_read = dir->read( contextToHandle( file_info->Context ), static_cast<uint8_t*>(buffer), bytes_to_read, offset );
-	std::wcout << "ReadFile: " << filename << " - " << bytes_to_read << "\n";
+	*bytes_read = file->object->read( file->handle, static_cast<uint8_t*>(buffer), bytes_to_read, offset );
+//	std::wcout << "ReadFile: " << filename << " - " << bytes_to_read << "\n";
 	return STATUS_SUCCESS;
 }
 
 NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes_to_write, LPDWORD bytes_written, LONGLONG offset, PDOKAN_FILE_INFO file_info ){
-	auto dir = data_dir->getFromPath( { filename } );
-	if( !dir )
-		return STATUS_OBJECT_NAME_NOT_FOUND;
+	PersistentFileObject* file = contextToHandle( file_info->Context );
+	if( !file ){
+		std::cout << "Write handle was missing, re-creating it\n";
+		auto dir = data_dir->getFromPath( { filename } );
+		if( !dir )
+			return STATUS_OBJECT_NAME_NOT_FOUND;
+		file = PersistentFileObject::createWriteAccess( *dir );
+	}
 	
-	*bytes_written = dir->write( contextToHandle( file_info->Context ), static_cast<const uint8_t*>(buffer), bytes_to_write, offset );
+	*bytes_written = file->object->write( file->handle, static_cast<const uint8_t*>(buffer), bytes_to_write, offset );
 	std::wcout << "WriteFile: " /*<< filename */<< "\n";
 	return STATUS_SUCCESS;
 }
@@ -143,13 +182,12 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 }
 
 void DOKAN_CALLBACK Cleanup( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
-	auto dir = data_dir->getFromPath( { filename } );
-	if( !dir )
-		return;
+	PersistentFileObject* file = contextToHandle( file_info->Context );
 	
-	if( file_info->Context != 0 ){
+	if( file ){
 //		std::wcout << "Removing handle for: " << filename << "\n";
-		dir->close( contextToHandle( file_info->Context ) );
+		file->object->close( file->handle );
+		delete file;
 		file_info->Context = 0;
 	}
 }
