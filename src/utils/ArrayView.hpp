@@ -25,10 +25,10 @@ class ArrayView{
 		T& operator[]( int index )       { return data[index]; } //TODO: Check in debug mode
 		T  operator[]( int index ) const { return data[index]; } //TODO: Check in debug mode
 		
-		T* begin()       { return data         ; }
-		T* begin() const { return data         ; }
-		T* end()         { return data + lenght; }
-		T* end()   const { return data + lenght; }
+		      T* begin()       { return data         ; }
+		const T* begin() const { return data         ; }
+		      T* end()         { return data + lenght; }
+		const T* end()   const { return data + lenght; }
 		
 		bool operator==( ArrayView<T> other ) const{
 			if( size() != other.size() )

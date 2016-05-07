@@ -3,6 +3,7 @@
 #ifndef BUFFER_HPP
 #define BUFFER_HPP
 
+#include "ArrayView.hpp"
 #include <memory>
 
 
@@ -21,7 +22,8 @@ class Buffer{
 				buffer[i] = copy.buffer[i];
 		}
 		*/
-		auto data(){ return buffer.get(); }
+		      auto data()      { return buffer.get(); }
+		const auto data() const{ return buffer.get(); }
 		auto size() const{ return lenght; }
 		
 		auto begin(){ return buffer.get(); }
@@ -29,6 +31,9 @@ class Buffer{
 		
 		uint8_t& operator[]( int index )       { return buffer[index]; }
 		uint8_t& operator[]( int index ) const { return buffer[index]; }
+		
+		ArrayView<      uint8_t> view()      { return { data(), size() }; }
+		ArrayView<const uint8_t> view() const{ return { data(), size() }; }
 };
 
 #endif

@@ -3,6 +3,7 @@
 #ifndef FILE_HPP
 #define FILE_HPP
 
+#include "ArrayView.hpp"
 #include "Buffer.hpp"
 
 #include <cstdio>
@@ -38,6 +39,12 @@ class File{
 			seek( current, 0 );
 			return read( end - current );
 		}
+		
+		template<typename T>
+		auto write( ArrayView<T> view )
+			{ fwrite( view.begin(), sizeof(T), view.size(), handle ); }
+		
+		auto write( const Buffer& buffer ){ return write( buffer.view() ); }
 };
 
 #endif
