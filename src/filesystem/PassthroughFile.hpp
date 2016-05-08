@@ -23,8 +23,8 @@ class PassthroughFile : public FileObject{
 		FileHandle openRead() const override;
 		FileHandle openWrite() const override;
 		FileHandle openAppend() const override;
-		uint64_t read(  FileHandle handle,       uint8_t* buffer, uint64_t amount, uint64_t offset ) const override;
-		uint64_t write( FileHandle handle, const uint8_t* buffer, uint64_t amount, uint64_t offset ) const override;
+		uint64_t read(  FileHandle handle,      ByteView to_read,  uint64_t offset ) const override;
+		uint64_t write( FileHandle handle, ConstByteView to_write, uint64_t offset ) const override;
 		void close( FileHandle handle ) const override;
 };
 

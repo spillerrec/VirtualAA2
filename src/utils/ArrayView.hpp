@@ -45,7 +45,8 @@ class ArrayView{
 		}
 };
 
-using ByteView = ArrayView<uint8_t>;
+using      ByteView = ArrayView<      uint8_t>;
+using ConstByteView = ArrayView<const uint8_t>;
 
 struct NotByteView : public ByteView {
 	NotByteView() {}

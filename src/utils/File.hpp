@@ -8,18 +8,19 @@
 
 #include <cstdio>
 
-class File{
-	private:
+/** Non-owning File reading/writing abstraction */
+class FileOperations{
+	protected:
 		FILE* handle;
 	
 	public:
-		File( const char* filepath, const char* flags="rb" );
-		File( const wchar_t* filepath, const wchar_t* flags=L"rb" );
-		~File(){ std::fclose( handle ); }
+		FileOperations( FILE* handle ) : handle(handle) { } //TODO: throw on (handle == nullptr)
 		
-		void read( Buffer& buf ){
-			fread( buf.data(), 1, buf.size(), handle );
-		}
+		template<typename T>
+		auto read( ArrayView<T> view )
+			{ return fread( view.begin(), sizeof(T), view.size(), handle ); }
+		
+		auto read( Buffer& buf ){ return read( buf.view() ); }
 		
 		auto seek( long int offset, int origin )
 			{ return fseek( handle, offset, origin ); }
@@ -42,9 +43,25 @@ class File{
 		
 		template<typename T>
 		auto write( ArrayView<T> view )
-			{ fwrite( view.begin(), sizeof(T), view.size(), handle ); }
+			{ return fwrite( view.begin(), sizeof(T), view.size(), handle ); }
 		
 		auto write( const Buffer& buffer ){ return write( buffer.view() ); }
+};
+
+/** Owning File reading/writing */
+class File : public FileOperations{
+	public:
+		File( const char* filepath, const char* flags="rb" );
+		File( const wchar_t* filepath, const wchar_t* flags=L"rb" );
+		~File(){ std::fclose( handle ); }
+		
+		/** Returns the handle, and removes it from memory management
+		 *  @return The file handle */
+		FILE* stealHandle(){
+			auto out = handle;
+			handle = 0;
+			return out;
+		}
 };
 
 #endif

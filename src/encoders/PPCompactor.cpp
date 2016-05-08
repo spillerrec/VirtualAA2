@@ -56,8 +56,7 @@ void PPCompactor::importPP( std::wstring path ){
 		auto output = f.getFile( file );
 		auto wide_name = toWString( string( (char*)f.filename.data() ) );
 		
-		auto fout = _wfopen( (prefix + wide_name).c_str(), L"wb" );
-		fwrite( output.data(), 1, output.size(), fout );
-		fclose( fout );
+		File fout( (prefix + wide_name).c_str(), L"wb" );
+		fout.write( output.view() );
 	}
 }

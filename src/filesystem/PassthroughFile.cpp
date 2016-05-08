@@ -4,6 +4,7 @@
 #include "PassthroughFile.hpp"
 #include "FilePath.hpp"
 #include "../utils/debug.hpp"
+#include "../utils/File.hpp"
 
 PassthroughFile::PassthroughFile( std::wstring filepath ) : filepath(filepath) {
 	FilePath path( this->filepath.c_str() );
@@ -26,23 +27,25 @@ uint64_t PassthroughFile::filesize() const{
 
 
 FileHandle PassthroughFile::openRead() const{
-	return _wfopen( filepath.c_str(), L"rb" );
+	return File( filepath.c_str(), L"rb" ).stealHandle();
 }
 FileHandle PassthroughFile::openWrite() const{
-	return _wfopen( filepath.c_str(), L"wb" );
+	return File( filepath.c_str(), L"wb" ).stealHandle();
 }
 FileHandle PassthroughFile::openAppend() const{
-	return _wfopen( filepath.c_str(), L"ab" );
+	return File( filepath.c_str(), L"ab" ).stealHandle();
 }
 
-uint64_t PassthroughFile::read( FileHandle handle, uint8_t* buffer, uint64_t amount, uint64_t offset ) const{
-	fseek( handle, offset, 0 );
-	return fread( buffer, 1, amount, handle );
+uint64_t PassthroughFile::read( FileHandle handle, ByteView to_read, uint64_t offset ) const{
+	FileOperations file( handle );
+	file.seek( offset, 0 );
+	return file.read( to_read );
 }
 
-uint64_t PassthroughFile::write( FileHandle handle, const uint8_t* buffer, uint64_t amount, uint64_t offset ) const{
-	fseek( handle, offset, 0 );
-	return fwrite( buffer, 1, amount, handle );
+uint64_t PassthroughFile::write( FileHandle handle, ConstByteView to_write, uint64_t offset ) const{
+	FileOperations file( handle );
+	file.seek( offset, 0 );
+	return file.write( to_write );
 }
 
 void PassthroughFile::close( FileHandle handle ) const{

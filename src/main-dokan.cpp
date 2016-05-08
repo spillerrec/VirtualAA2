@@ -118,7 +118,8 @@ NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_t
 		file = PersistentFileObject::createReadAccess( *dir );
 	}
 	
-	*bytes_read = file->object->read( file->handle, static_cast<uint8_t*>(buffer), bytes_to_read, offset );
+	ByteView read_buffer( static_cast<uint8_t*>(buffer), bytes_to_read );
+	*bytes_read = file->object->read( file->handle, read_buffer, offset );
 //	std::wcout << "ReadFile: " << filename << " - " << bytes_to_read << "\n";
 	return STATUS_SUCCESS;
 }
@@ -133,7 +134,8 @@ NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes
 		file = PersistentFileObject::createWriteAccess( *dir );
 	}
 	
-	*bytes_written = file->object->write( file->handle, static_cast<const uint8_t*>(buffer), bytes_to_write, offset );
+	ConstByteView write_buffer( static_cast<const uint8_t*>(buffer), bytes_to_write );
+	*bytes_written = file->object->write( file->handle, write_buffer, offset );
 	std::wcout << "WriteFile: " /*<< filename */<< "\n";
 	return STATUS_SUCCESS;
 }

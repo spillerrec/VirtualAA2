@@ -26,8 +26,8 @@ class FileObject{
 		virtual FileHandle openRead() const = 0;
 		virtual FileHandle openWrite() const = 0;
 		virtual FileHandle openAppend() const = 0;
-		virtual uint64_t read(  FileHandle handle,       uint8_t* buffer, uint64_t amount, uint64_t offset ) const = 0;
-		virtual uint64_t write( FileHandle handle, const uint8_t* buffer, uint64_t amount, uint64_t offset ) const = 0;
+		virtual uint64_t read(  FileHandle handle,      ByteView to_read,  uint64_t offset ) const = 0;
+		virtual uint64_t write( FileHandle handle, ConstByteView to_write, uint64_t offset ) const = 0;
 		virtual void close( FileHandle handle ) const = 0;
 		
 		virtual uint64_t children() const{ return 0; }
