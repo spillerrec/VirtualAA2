@@ -15,8 +15,6 @@ extern "C"{
 #include "filesystem/FilePath.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 
-std::unique_ptr<VirtualDataDir> data_dir;
-
 static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
 	ULARGE_INTEGER large;
 	large.QuadPart = filesize;
@@ -52,18 +50,23 @@ struct PersistentFileObject{
 		}
 };
 
-ULONG64 handleToContext( PersistentFileObject* handle )
-	{ return reinterpret_cast<ULONG64>( handle ); }
+void handleToContext( PDOKAN_FILE_INFO file_info, PersistentFileObject* handle )
+	{ file_info->Context = reinterpret_cast<ULONG64>( handle ); }
 
-PersistentFileObject* contextToHandle( ULONG64 context )
-	{ return reinterpret_cast<PersistentFileObject*>( context ); }
+PersistentFileObject* contextToHandle( PDOKAN_FILE_INFO file_info )
+	{ return reinterpret_cast<PersistentFileObject*>( file_info->Context ); }
 
+static void setRoot( _DOKAN_OPTIONS& options, VirtualDataDir& root_dir )
+	{ options.GlobalContext = reinterpret_cast<ULONG64>( &root_dir ); }
+
+static VirtualDataDir& getRoot( PDOKAN_FILE_INFO file_info )
+	{ return *reinterpret_cast<VirtualDataDir*>( file_info->DokanOptions->GlobalContext ); }
 
 namespace VirtualAA2{
 
 NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT, ACCESS_MASK DesiredAccess, ULONG FileAttributes, ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions, PDOKAN_FILE_INFO file_info ){
 	bool read_only = true;
-	auto dir = data_dir->getFromPath( { filename } );
+	auto dir = getRoot( file_info ).getFromPath( { filename } );
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
@@ -92,15 +95,15 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 	if( !dir->isDir() ){
 		if( DesiredAccess & FILE_READ_DATA ){
 			std::wcout << "Creating read handle for: " << filename << "\n";
-			file_info->Context = handleToContext( PersistentFileObject::createReadAccess( *dir ) );
+			handleToContext( file_info, PersistentFileObject::createReadAccess( *dir ) );
 		}
 		else if( DesiredAccess & FILE_WRITE_DATA ){
 			std::wcout << "Creating write handle for: " << filename << "\n";
-			file_info->Context = handleToContext( PersistentFileObject::createWriteAccess( *dir ) );
+			handleToContext( file_info, PersistentFileObject::createWriteAccess( *dir ) );
 		}
 		else if( DesiredAccess & FILE_APPEND_DATA ){
 			std::wcout << "Creating append handle for: " << filename << "\n";
-			file_info->Context = handleToContext( PersistentFileObject::createAppendAccess( *dir ) );
+			handleToContext( file_info, PersistentFileObject::createAppendAccess( *dir ) );
 		}
 	}
 	
@@ -109,10 +112,10 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 
 
 NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_to_read, LPDWORD bytes_read, LONGLONG offset, PDOKAN_FILE_INFO file_info ){
-	auto file = contextToHandle( file_info->Context );
+	auto file = contextToHandle( file_info );
 	if( !file ){
 		std::cout << "Read handle was missing, re-creating it\n";
-		auto dir = data_dir->getFromPath( { filename } );
+		auto dir = getRoot( file_info ).getFromPath( { filename } );
 		if( !dir )
 			return STATUS_OBJECT_NAME_NOT_FOUND;
 		file = PersistentFileObject::createReadAccess( *dir );
@@ -125,10 +128,10 @@ NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_t
 }
 
 NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes_to_write, LPDWORD bytes_written, LONGLONG offset, PDOKAN_FILE_INFO file_info ){
-	PersistentFileObject* file = contextToHandle( file_info->Context );
+	PersistentFileObject* file = contextToHandle( file_info );
 	if( !file ){
 		std::cout << "Write handle was missing, re-creating it\n";
-		auto dir = data_dir->getFromPath( { filename } );
+		auto dir = getRoot( file_info ).getFromPath( { filename } );
 		if( !dir )
 			return STATUS_OBJECT_NAME_NOT_FOUND;
 		file = PersistentFileObject::createWriteAccess( *dir );
@@ -142,7 +145,7 @@ NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes
 
 
 NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_INFORMATION info, PDOKAN_FILE_INFO file_info ){
-	auto dir = data_dir->getFromPath( { filename } );
+	auto dir = getRoot( file_info ).getFromPath( { filename } );
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
@@ -160,7 +163,7 @@ NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_I
 }
 
 NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FILE_INFO file_info ){
-	auto dir = data_dir->getFromPath( { path } );
+	auto dir = getRoot( file_info ).getFromPath( { path } );
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
@@ -184,7 +187,7 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 }
 
 void DOKAN_CALLBACK Cleanup( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
-	PersistentFileObject* file = contextToHandle( file_info->Context );
+	PersistentFileObject* file = contextToHandle( file_info );
 	
 	if( file ){
 //		std::wcout << "Removing handle for: " << filename << "\n";
@@ -215,7 +218,8 @@ int wmain( int argc, wchar_t* argv[] ){
 	//options.GlobalContext = 0;
 	options.MountPoint = argc < 3 ? L"v" : argv[2];
 	
-	data_dir = std::make_unique<VirtualDataDir>( data_dir_path );
+	VirtualDataDir data_dir( data_dir_path );
+	setRoot( options, data_dir );
 	
 	_DOKAN_OPERATIONS func = { 0 };
 	
