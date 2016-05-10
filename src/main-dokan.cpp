@@ -65,7 +65,7 @@ static VirtualDataDir& getRoot( PDOKAN_FILE_INFO file_info )
 namespace VirtualAA2{
 
 NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT, ACCESS_MASK DesiredAccess, ULONG FileAttributes, ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions, PDOKAN_FILE_INFO file_info ){
-	bool read_only = true;
+	bool read_only = false;
 	auto dir = getRoot( file_info ).getFromPath( { filename } );
 	if( !dir )
 		return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -78,7 +78,7 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 	}
 	*/
 	
-	if( DesiredAccess & (FILE_WRITE_DATA) && (!dir->canWrite() || read_only) ){
+	if( DesiredAccess & (FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES) && (!dir->canWrite() || read_only) ){
 		std::wcout << "Write not allowed for: " << filename << "\n";
 		return STATUS_ACCESS_VIOLATION;
 	}
@@ -93,18 +93,27 @@ NTSTATUS DOKAN_CALLBACK CreateFile( LPCWSTR filename, PDOKAN_IO_SECURITY_CONTEXT
 	file_info->IsDirectory = dir->isDir();
 	
 	if( !dir->isDir() ){
+		const char* debug = "";
 		if( DesiredAccess & FILE_READ_DATA ){
-			std::wcout << "Creating read handle for: " << filename << "\n";
+			debug = "Creating read handle";
 			handleToContext( file_info, PersistentFileObject::createReadAccess( *dir ) );
 		}
 		else if( DesiredAccess & FILE_WRITE_DATA ){
-			std::wcout << "Creating write handle for: " << filename << "\n";
+			debug = "Creating write handle";
 			handleToContext( file_info, PersistentFileObject::createWriteAccess( *dir ) );
 		}
 		else if( DesiredAccess & FILE_APPEND_DATA ){
-			std::wcout << "Creating append handle for: " << filename << "\n";
+			debug = "Creating append handle";
 			handleToContext( file_info, PersistentFileObject::createAppendAccess( *dir ) );
 		}
+		else if( DesiredAccess & FILE_READ_ATTRIBUTES )
+			debug = "Not understood read attr";
+		else if( DesiredAccess & FILE_WRITE_ATTRIBUTES )
+			debug = "Not understood write attr";
+		else
+			debug = "Unknown access request";
+		
+	//	std::wcout << debug << " for: " << filename << "\n";
 	}
 	
 	return STATUS_SUCCESS;
@@ -139,7 +148,7 @@ NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes
 	
 	ConstByteView write_buffer( static_cast<const uint8_t*>(buffer), bytes_to_write );
 	*bytes_written = file->object->write( file->handle, write_buffer, offset );
-	std::wcout << "WriteFile: " /*<< filename */<< "\n";
+	std::wcout << "WriteFile: " << filename << " - " << *bytes_written << "\n";
 	return STATUS_SUCCESS;
 }
 
@@ -226,6 +235,7 @@ int wmain( int argc, wchar_t* argv[] ){
 	using namespace VirtualAA2;
 	func.ZwCreateFile = CreateFile;
 	func.ReadFile = ReadFile;
+	func.WriteFile = WriteFile;
 	func.GetFileInformation = GetFileInformation;
 	func.FindFiles = FindFiles;
 	func.Cleanup = Cleanup;
