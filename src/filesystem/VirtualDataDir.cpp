@@ -18,9 +18,11 @@ using namespace std;
 VirtualDataDir::VirtualDataDir( std::wstring filepath )
 	:	basedir( std::make_unique<PassthroughDir>( filepath ) )
 {
-	auto imports = getFolders( filepath + L"\\import" );
+	auto imports = getFolderContents( filepath + L"\\import" );
+	WStringView pp_ext( L".pp", 3 );
 	for( auto import : imports ){
-		PPCompactor::importPP( filepath + L"\\import\\" + import );
+		if( !import.is_dir && makeView(import.name).endsWith( pp_ext ) )
+			PPCompactor::importPP( filepath + L"\\import\\" + import.name );
 	}
 }
 

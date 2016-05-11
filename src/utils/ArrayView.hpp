@@ -39,9 +39,19 @@ class ArrayView{
 		
 		std::basic_string<type> toBasicString() const{
 			auto buf = std::make_unique<type[]>( size() );
-			for( unsigned i=0; i<size(); i++ )
-				buf[i] = (*this)[i];
+			std::copy( begin(), end(), buf.get() );
 			return std::basic_string<type>( buf.get(), size() );
+		}
+		
+		bool startsWith( ArrayView<T> that ) const {
+			if( that.size() > size() )
+				return false;
+			return std::equal( that.begin(), that.end(), begin() );
+		}
+		bool endsWith( ArrayView<T> that ) const {
+			if( that.size() > size() )
+				return false;
+			return std::equal( that.begin(), that.end(), end()-that.size() );
 		}
 };
 

@@ -6,7 +6,15 @@
 #include <string>
 #include <vector>
 
-std::vector<std::wstring> getFolders( std::wstring path );
+struct FolderContent{
+	bool is_dir;
+	std::wstring name;
+	uint64_t filesize;
+	uint64_t creation_time;
+	uint64_t access_time;
+	uint64_t modified_time;
+};
+std::vector<FolderContent> getFolderContents( std::wstring path );
 bool makeFolder( std::wstring path, std::wstring name );
 
 #endif

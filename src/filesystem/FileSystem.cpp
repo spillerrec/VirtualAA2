@@ -9,15 +9,39 @@
 
 using namespace std;
 
-std::vector<std::wstring> getFolders( std::wstring path ){
+
+static uint64_t convertFileSize( DWORD high, DWORD low ){
+	ULARGE_INTEGER large;
+	large.HighPart = high;
+	large.LowPart  = low;
+	return large.QuadPart;
+}
+
+static FolderContent fromFindData( const WIN32_FIND_DATA& data ){
+	FolderContent file;
+	
+	file.is_dir = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+	file.name = wstring{ data.cFileName };
+	file.filesize = convertFileSize( data.nFileSizeHigh, data.nFileSizeLow );
+	
+	//TODO:
+	file.creation_time = 0;
+	file.access_time   = 0;
+	file.modified_time = 0;
+	
+	return file;
+}
+
+std::vector<FolderContent> getFolderContents( std::wstring path ){
 	WIN32_FIND_DATA find_data;
 	auto handle = FindFirstFile( (path + L"\\*").c_str(), &find_data );
 	
-	std::vector<std::wstring> children;
+	std::vector<FolderContent> children;
 	if( handle != INVALID_HANDLE_VALUE ){
 		do{
-			if( wstring{ find_data.cFileName } != L"." && wstring{ find_data.cFileName } != L".." )
-				children.emplace_back( find_data.cFileName );
+			FolderContent file = fromFindData( find_data );
+			if( file.name != L"." && file.name != L".." )
+				children.emplace_back( file );
 		} while( FindNextFile( handle, &find_data ) );
 		
 		FindClose( handle );
