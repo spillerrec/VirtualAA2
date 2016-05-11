@@ -3,17 +3,16 @@
 
 #include "PassthroughDir.hpp"
 
+#include "FileSystem.hpp"
 #include "PassthroughFile.hpp"
 #include "FilePath.hpp"
 #include "../utils/debug.hpp"
 
-#include <Windows.h>
-
 using namespace std;
 
-static unique_ptr<FileObject> makePassthrough( wstring parent, WIN32_FIND_DATA info ){
-	auto new_path = parent + L"\\" + wstring{ info.cFileName };
-	if( info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+static unique_ptr<FileObject> makePassthrough( wstring parent, FolderContent info ){
+	auto new_path = parent + L"\\" + info.name;
+	if( info.is_dir )
 		return make_unique<PassthroughDir>( new_path );
 	else
 		return make_unique<PassthroughFile>( new_path );
@@ -22,17 +21,10 @@ static unique_ptr<FileObject> makePassthrough( wstring parent, WIN32_FIND_DATA i
 PassthroughDir::PassthroughDir( std::wstring filepath ) : filepath(filepath) {
 	FilePath path( this->filepath.c_str() );
 	require( path.path.size() > 0 );
-	filename = path.path.back();
+	filename = path.filename();
 	
-	WIN32_FIND_DATA find_data;
-	auto handle = FindFirstFile( (filepath + L"\\*").c_str(), &find_data );
-	
-	if( handle != INVALID_HANDLE_VALUE ){
-		do{
-			if( wstring{ find_data.cFileName } != L"." && wstring{ find_data.cFileName } != L".." )
-				objects.emplace_back( makePassthrough( filepath, find_data ) );
-		} while( FindNextFile( handle, &find_data ) );
-		
-		FindClose( handle );
-	}
+	auto files = getFolderContents( filepath );
+	objects.reserve( files.size() );
+	for( auto file : files )
+		objects.emplace_back( makePassthrough( filepath, file ) );
 }
