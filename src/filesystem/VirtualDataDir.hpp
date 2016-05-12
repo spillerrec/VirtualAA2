@@ -7,12 +7,29 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 class FilePath;
 
+struct FolderImport{
+	std::wstring name;
+	std::unique_ptr<FileObject> folder;
+	FolderImport( std::wstring name, std::unique_ptr<FileObject> folder )
+		:	name(std::move(name)), folder(std::move(folder)) { }
+};
+
+class Mod{
+	public:
+		std::wstring name;
+		std::vector<FolderImport> folders;
+};
+
 class VirtualDataDir{
 	private:
-		std::unique_ptr<FileObject> basedir;
+		std::vector<FolderImport> folders; //The folders which can be emulated
+		std::vector<Mod> mods; //The available mods
+		
+		FileObject* getFolder( const std::wstring& name );
 		
 	public:
 		VirtualDataDir( std::wstring filepath );
