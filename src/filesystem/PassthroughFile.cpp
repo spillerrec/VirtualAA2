@@ -12,10 +12,6 @@ PassthroughFile::PassthroughFile( std::wstring filepath ) : filepath(filepath) {
 	filename = path.path.back();
 }
 
-WStringView PassthroughFile::name() const{
-	return filename;
-}
-
 	
 uint64_t PassthroughFile::filesize() const{
 	__stat64 stat = { 0 };
@@ -25,30 +21,32 @@ uint64_t PassthroughFile::filesize() const{
 		return 0;
 }
 
+class PassthroughFileHandle : public FileHandle{
+	private:
+		File file;
+		//TODO: Try to optimize away the seeks?
+		
+	public:
+		PassthroughFileHandle( const std::wstring& path, const wchar_t* mode )
+			:	file( path.c_str(), mode ) { }
+		
+		uint64_t read( ByteView to_read, uint64_t offset ) override{
+			file.seek( offset, 0 );
+			return file.read( to_read );
+		}
 
-FileHandle PassthroughFile::openRead() const{
-	return File( filepath.c_str(), L"rb" ).stealHandle();
-}
-FileHandle PassthroughFile::openWrite() const{
-	return File( filepath.c_str(), L"wb" ).stealHandle();
-}
-FileHandle PassthroughFile::openAppend() const{
-	return File( filepath.c_str(), L"ab" ).stealHandle();
-}
+		uint64_t write( ConstByteView to_write, uint64_t offset ) override{
+			file.seek( offset, 0 );
+			return file.write( to_write );
+		}
+};
 
-uint64_t PassthroughFile::read( FileHandle handle, ByteView to_read, uint64_t offset ) const{
-	FileOperations file( handle );
-	file.seek( offset, 0 );
-	return file.read( to_read );
-}
+std::unique_ptr<FileHandle> PassthroughFile::openRead() const
+	{ return std::make_unique<PassthroughFileHandle>( filepath.c_str(), L"rb" ); }
 
-uint64_t PassthroughFile::write( FileHandle handle, ConstByteView to_write, uint64_t offset ) const{
-	FileOperations file( handle );
-	file.seek( offset, 0 );
-	return file.write( to_write );
-}
+std::unique_ptr<FileHandle> PassthroughFile::openWrite() const
+	{ return std::make_unique<PassthroughFileHandle>( filepath.c_str(), L"wb" ); }
 
-void PassthroughFile::close( FileHandle handle ) const{
-	fclose( handle );
-}
+std::unique_ptr<FileHandle> PassthroughFile::openAppend() const
+	{ return std::make_unique<PassthroughFileHandle>( filepath.c_str(), L"ab" ); }
 

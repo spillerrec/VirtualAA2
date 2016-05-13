@@ -25,7 +25,7 @@ static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
 struct PersistentFileObject{
 	public:
 		const FileObject* object;
-		FILE* handle{ 0 };
+		std::unique_ptr<FileHandle> handle;
 	
 	private:
 		PersistentFileObject( const FileObject* object ) : object(object) { }
@@ -131,7 +131,7 @@ NTSTATUS DOKAN_CALLBACK ReadFile( LPCWSTR filename, LPVOID buffer, DWORD bytes_t
 	}
 	
 	ByteView read_buffer( static_cast<uint8_t*>(buffer), bytes_to_read );
-	*bytes_read = file->object->read( file->handle, read_buffer, offset );
+	*bytes_read = file->handle->read( read_buffer, offset );
 //	std::wcout << "ReadFile: " << filename << " - " << bytes_to_read << "\n";
 	return STATUS_SUCCESS;
 }
@@ -147,7 +147,7 @@ NTSTATUS DOKAN_CALLBACK WriteFile( LPCWSTR filename, LPCVOID buffer, DWORD bytes
 	}
 	
 	ConstByteView write_buffer( static_cast<const uint8_t*>(buffer), bytes_to_write );
-	*bytes_written = file->object->write( file->handle, write_buffer, offset );
+	*bytes_written = file->handle->write( write_buffer, offset );
 	std::wcout << "WriteFile: " << filename << " - " << *bytes_written << "\n";
 	return STATUS_SUCCESS;
 }
@@ -199,8 +199,6 @@ void DOKAN_CALLBACK Cleanup( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
 	PersistentFileObject* file = contextToHandle( file_info );
 	
 	if( file ){
-//		std::wcout << "Removing handle for: " << filename << "\n";
-		file->object->close( file->handle );
 		delete file;
 		file_info->Context = 0;
 	}

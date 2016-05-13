@@ -7,8 +7,14 @@
 
 #include <stdexcept>
 #include <cstdio>
+#include <memory>
 
-using FileHandle = FILE*;
+class FileHandle{
+	public:
+		virtual uint64_t read(       ByteView to_read,  uint64_t offset ) = 0;
+		virtual uint64_t write( ConstByteView to_write, uint64_t offset ) = 0;
+		virtual ~FileHandle() { }
+};
 
 struct Time{
 	uint64_t unix{ 0 };
@@ -23,12 +29,9 @@ class FileObject{
 		virtual bool canWrite() const = 0;
 		virtual uint64_t filesize() const{ return 0; }
 		
-		virtual FileHandle openRead() const = 0;
-		virtual FileHandle openWrite() const = 0;
-		virtual FileHandle openAppend() const = 0;
-		virtual uint64_t read(  FileHandle handle,      ByteView to_read,  uint64_t offset ) const = 0;
-		virtual uint64_t write( FileHandle handle, ConstByteView to_write, uint64_t offset ) const = 0;
-		virtual void close( FileHandle handle ) const = 0;
+		virtual std::unique_ptr<FileHandle> openRead()   const { return { nullptr }; }
+		virtual std::unique_ptr<FileHandle> openWrite()  const { return { nullptr }; }
+		virtual std::unique_ptr<FileHandle> openAppend() const { return { nullptr }; }
 		
 		virtual uint64_t children() const{ return 0; }
 		virtual const FileObject& operator[]( int index ) const{ throw std::domain_error( "No children defined!" ); }

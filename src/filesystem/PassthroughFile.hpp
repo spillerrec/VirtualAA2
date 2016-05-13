@@ -15,17 +15,14 @@ class PassthroughFile : public FileObject{
 	public:
 		PassthroughFile( std::wstring filepath );
 		
-		WStringView name() const override;
+		WStringView name() const override{ return filename; }
 		bool isDir() const override{ return false; }
 		bool canWrite() const override{ return true; }
 		uint64_t filesize() const override;
 		
-		FileHandle openRead() const override;
-		FileHandle openWrite() const override;
-		FileHandle openAppend() const override;
-		uint64_t read(  FileHandle handle,      ByteView to_read,  uint64_t offset ) const override;
-		uint64_t write( FileHandle handle, ConstByteView to_write, uint64_t offset ) const override;
-		void close( FileHandle handle ) const override;
+		std::unique_ptr<FileHandle> openRead()   const override;
+		std::unique_ptr<FileHandle> openWrite()  const override;
+		std::unique_ptr<FileHandle> openAppend() const override;
 };
 
 #endif

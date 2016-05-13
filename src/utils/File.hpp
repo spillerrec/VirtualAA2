@@ -54,14 +54,6 @@ class File : public FileOperations{
 		File( const char* filepath, const char* flags="rb" );
 		File( const wchar_t* filepath, const wchar_t* flags=L"rb" );
 		~File(){ std::fclose( handle ); }
-		
-		/** Returns the handle, and removes it from memory management
-		 *  @return The file handle */
-		FILE* stealHandle(){
-			auto out = handle;
-			handle = 0;
-			return out;
-		}
 };
 
 #endif
