@@ -15,6 +15,8 @@ class PassthroughDir : public FileObject{
 		WStringView filename;
 		
 		std::vector<std::unique_ptr<FileObject>> objects;
+		std::vector<const FileObject*> object_refs;
+		bool contains( WStringView name );
 		
 	public:
 		PassthroughDir( std::wstring filepath );
@@ -24,8 +26,12 @@ class PassthroughDir : public FileObject{
 		bool canWrite() const override{ return false; }
 		uint64_t filesize() const override{ return 0; }
 		
-		uint64_t children() const override{ return objects.size(); }
-		const FileObject& operator[]( int index ) const override{ return *objects[index]; }
+		uint64_t children() const override{ return objects.size() + object_refs.size(); }
+		const FileObject& operator[]( int index ) const override;
+		
+		void combine( FileObject& with ) override;
+		
+		FileObjectId type() const override{ return 2; }
 };
 
 #endif

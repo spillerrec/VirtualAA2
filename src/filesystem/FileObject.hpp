@@ -5,8 +5,6 @@
 
 #include "../utils/StringView.hpp"
 
-#include <stdexcept>
-#include <cstdio>
 #include <memory>
 
 class FileHandle{
@@ -20,6 +18,8 @@ struct Time{
 	uint64_t unix{ 0 };
 };
 
+using FileObjectId = uint64_t;
+
 class FileObject{
 	public:
 		virtual WStringView name() const = 0;
@@ -29,12 +29,17 @@ class FileObject{
 		virtual bool canWrite() const = 0;
 		virtual uint64_t filesize() const{ return 0; }
 		
-		virtual std::unique_ptr<FileHandle> openRead()   const { return { nullptr }; }
-		virtual std::unique_ptr<FileHandle> openWrite()  const { return { nullptr }; }
-		virtual std::unique_ptr<FileHandle> openAppend() const { return { nullptr }; }
+		virtual std::unique_ptr<FileHandle> openRead()   const;
+		virtual std::unique_ptr<FileHandle> openWrite()  const;
+		virtual std::unique_ptr<FileHandle> openAppend() const;
 		
+		virtual FileObjectId type() const = 0;
 		virtual uint64_t children() const{ return 0; }
-		virtual const FileObject& operator[]( int index ) const{ throw std::domain_error( "No children defined!" ); }
+		virtual const FileObject& operator[]( int index ) const;
+		
+		virtual void combine( FileObject& with );
+		
+		const FileObject* find( WStringView child_name ) const;
 		
 		virtual ~FileObject() { }
 };

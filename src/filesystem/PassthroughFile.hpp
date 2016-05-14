@@ -23,6 +23,8 @@ class PassthroughFile : public FileObject{
 		std::unique_ptr<FileHandle> openRead()   const override;
 		std::unique_ptr<FileHandle> openWrite()  const override;
 		std::unique_ptr<FileHandle> openAppend() const override;
+		
+		FileObjectId type() const override{ return 1; }
 };
 
 #endif

@@ -16,6 +16,7 @@ set(SOURCES_ENCODERS
 	)
 
 set(SOURCES_FILESYSTEM
+	filesystem/FileObject.cpp
 	filesystem/FileSystem.cpp
 	filesystem/PassthroughDir.cpp
 	filesystem/PassthroughFile.cpp

@@ -62,14 +62,6 @@ FileObject* VirtualDataDir::getFolder( const std::wstring& name ){
 		return nullptr;
 }
 
-static bool compareInsensitive( WStringView a, WStringView b ){
-	if( a.size() != b.size() )
-		return false;
-	return equal( a.begin(), a.end(), b.begin()
-		,	[]( auto a, auto b ){ return towlower(a) == towlower(b); }
-		);
-}
-
 const FileObject* VirtualDataDir::getFromPath( FilePath path ){
 	auto main = getFolder( L"aa2main" );
 	require( main != nullptr );
@@ -80,18 +72,9 @@ const FileObject* VirtualDataDir::getFromPath( FilePath path ){
 	
 	const FileObject* current = main;
 	for( unsigned i=1; i<path.path.size(); i++ ){
-		auto currentpath = path.path[i];
-		
-		const FileObject* found = nullptr;
-		for( unsigned j=0; j<current->children(); j++ )
-			if( compareInsensitive( (*current)[j].name(), currentpath ) ){
-				found = &(*current)[j];
-				break;
-			}
-		
-		if( !found )
+		current = current->find( path.path[i] );
+		if( !current )
 			return nullptr;
-		current = found;
 	}
 	
 	return current;

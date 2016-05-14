@@ -28,3 +28,26 @@ PassthroughDir::PassthroughDir( std::wstring filepath ) : filepath(filepath) {
 	for( auto file : files )
 		objects.emplace_back( makePassthrough( filepath, file ) );
 }
+
+const FileObject& PassthroughDir::operator[]( int index ) const{
+	if( index < objects.size() )
+		return *objects[index];
+	else
+		return *(object_refs[ index-objects.size() ]);
+}
+
+bool PassthroughDir::contains( WStringView name ){
+	for( unsigned i=0; i<children(); i++ )
+		if( (*this)[i].name() == name )
+			return true;
+	return false;
+}
+
+void PassthroughDir::combine( FileObject& with ){
+	for( unsigned i=0; i<with.children(); i++ ){
+		if( contains( with[i].name() ) )
+			throw std::runtime_error( "File already exists!" );
+		else
+			object_refs.push_back( &with[i] );
+	}
+}
