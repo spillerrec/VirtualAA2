@@ -4,6 +4,7 @@
 #define VIRTUAL_DATA_DIR_HPP
 
 #include "FileObject.hpp"
+#include "FakeDir.hpp"
 
 #include <string>
 #include <memory>
@@ -21,11 +22,12 @@ struct FolderImport{
 class Mod{
 	public:
 		std::wstring name;
-		std::vector<FolderImport> folders;
+		FakeDir folders;
 };
 
 class VirtualDataDir{
 	private:
+		FakeDir root;
 		std::vector<FolderImport> folders; //The folders which can be emulated
 		std::vector<Mod> mods; //The available mods
 		

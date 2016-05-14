@@ -12,6 +12,9 @@ PassthroughFile::PassthroughFile( std::wstring filepath ) : filepath(filepath) {
 	filename = path.path.back();
 }
 
+std::unique_ptr<FileObject> PassthroughFile::copy() const
+	{ return std::make_unique<PassthroughFile>( filepath ); }
+
 	
 uint64_t PassthroughFile::filesize() const{
 	__stat64 stat = { 0 };

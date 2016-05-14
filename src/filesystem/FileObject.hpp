@@ -36,9 +36,13 @@ class FileObject{
 		virtual FileObjectId type() const = 0;
 		virtual uint64_t children() const{ return 0; }
 		virtual const FileObject& operator[]( int index ) const;
+		virtual       FileObject& operator[]( int index )      ; //Overwrite this if you need different behaviour from const version!
 		
-		virtual void combine( FileObject& with );
+		virtual std::unique_ptr<FileObject> copy() const = 0;
 		
+		virtual void combine( const FileObject& with );
+		
+		      FileObject* find( WStringView child_name );
 		const FileObject* find( WStringView child_name ) const;
 		
 		virtual ~FileObject() { }

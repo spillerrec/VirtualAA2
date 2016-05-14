@@ -20,12 +20,11 @@ static Mod loadMod( std::wstring filepath ){
 	mod.name = FilePath( makeView( filepath ) ).filename().toBasicString();
 	
 	//Load folders
-	auto game_folders = getFolderContents( filepath );
-	mod.folders.reserve( game_folders.size() );
-	for( auto game_folder : game_folders ){
-		auto file_object = std::make_unique<PassthroughDir>( filepath + L"\\" + game_folder.name ); //TODO: more intelligent
-		mod.folders.emplace_back( game_folder.name, std::move(file_object) );
-	}
+	for( auto game_folder : getFolderContents( filepath ) )
+		if( game_folder.is_dir ){
+			auto file_object = std::make_unique<PassthroughDir>( filepath + L"\\" + game_folder.name ); //TODO: more intelligent
+			mod.folders.addChild( std::move(file_object) );
+		}
 	
 	return mod;
 }
@@ -40,37 +39,28 @@ VirtualDataDir::VirtualDataDir( std::wstring filepath ) {
 		//	PPCompactor::importPP( filepath + L"\\import\\" + import.name );
 	}
 	
-	auto mod_folders = getFolderContents( filepath + L"\\packages" );
+	auto package_dir = filepath + L"\\packages";
+	auto mod_folders = getFolderContents( package_dir  );
 	mods.reserve( mod_folders.size() );
 	for( auto mod_folder : mod_folders )
 		if( mod_folder.is_dir )
-			mods.emplace_back( loadMod( mod_folder.name ) );
+			mods.emplace_back( loadMod( mod_folder.path( package_dir ) ) );
 	
-	for( auto& mod : mods )
+	for( auto& mod : mods ){
 		wcout << "Mod: " << mod.name << "\n";
-	//TODO: combine mods in main/edit
+		root.combine( mod.folders );
+	}
 }
 
-FileObject* VirtualDataDir::getFolder( const std::wstring& name ){
-	auto it = std::find_if( folders.begin(), folders.end()
-		,	[&]( auto& folder ){ return folder.name == name; }
-		);
-	
-	if( it != folders.end() )
-		return it->folder.get();
-	else
-		return nullptr;
-}
+FileObject* VirtualDataDir::getFolder( const std::wstring& name )
+	{ return root.find( makeView( name ) ); }
 
 const FileObject* VirtualDataDir::getFromPath( FilePath path ){
-	auto main = getFolder( L"aa2main" );
-	require( main != nullptr );
-	
 	require( path.hasRoot() );
 	if( path.isRoot() )
-		return main;
+		return &root;
 	
-	const FileObject* current = main;
+	const FileObject* current = &root;
 	for( unsigned i=1; i<path.path.size(); i++ ){
 		current = current->find( path.path[i] );
 		if( !current )

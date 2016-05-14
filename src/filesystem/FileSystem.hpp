@@ -13,6 +13,9 @@ struct FolderContent{
 	uint64_t creation_time;
 	uint64_t access_time;
 	uint64_t modified_time;
+	
+	std::wstring path( const std::wstring& parent )
+		{ return parent + L"\\" + name; }
 };
 std::vector<FolderContent> getFolderContents( std::wstring path );
 bool makeFolder( std::wstring path, std::wstring name );
