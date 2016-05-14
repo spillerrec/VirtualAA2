@@ -53,6 +53,13 @@ class ArrayView{
 				return false;
 			return std::equal( that.begin(), that.end(), end()-that.size() );
 		}
+		
+		auto find( const T& needle ) const { return std::find( begin(), end(), needle ); }
+		auto findIndex( const T& needle ) const{ return find( needle ) - begin(); }
+		
+		ArrayView<T> subView( int start, size_t amount ){ return { data+start, amount }; } //TODO: check range in debug mode
+		ArrayView<T> left(  size_t amount ){ return subView( 0, amount ); }
+		ArrayView<T> right( size_t amount ){ return subView( size()-amount, amount ); }
 };
 
 using      ByteView = ArrayView<      uint8_t>;

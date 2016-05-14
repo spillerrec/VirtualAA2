@@ -14,11 +14,12 @@ inline uint32_t convert32unsigned( uint8_t a, uint8_t b, uint8_t c, uint8_t d )
 
 class BufferReader{
 	private:
-		Buffer& buffer;
+		ByteView buffer;
 		size_t position{ 0 };
 		
 	public:
-		BufferReader( Buffer& buf ) : buffer(buf) { }
+		BufferReader( ByteView view ) : buffer(view) { }
+		BufferReader( Buffer& buf ) : buffer(buf.view()) { }
 		
 		auto tell() const{ return position; }
 		auto left() const{ return buffer.size() - position; }
@@ -48,7 +49,7 @@ class BufferReader{
 			return convert32unsigned( b[0], b[1], b[2], b[3] );
 		}
 		
-		NotByteView readName(){
+		ByteView readName(){
 			auto lenght = read32u();
 			return { read( lenght ) };
 		}

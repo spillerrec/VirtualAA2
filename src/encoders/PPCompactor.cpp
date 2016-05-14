@@ -46,7 +46,9 @@ void PPCompactor::importPP( std::wstring path ){
 	//Write header
 	File fheader( (prefix + L"__HEADER").c_str(), L"wb" );
 	for( auto& f : pp.files ){
-		fheader.write( f.filename );
+		auto name = f.filename.view().left( f.filename.view().findIndex( '\0' ) );
+		fheader.write32u( name.size() );
+		fheader.write( name );
 		fheader.write( f.metadata );
 	}
 	

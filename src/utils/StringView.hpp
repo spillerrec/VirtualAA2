@@ -11,6 +11,8 @@
 using StringView = ArrayView<const char>;
 using WStringView = ArrayView<const wchar_t>;
 
+inline StringView makeView( const char* null_terminated )
+	{ return { null_terminated, std::char_traits<char>::length( null_terminated ) }; }
 inline WStringView makeView( const wchar_t* null_terminated )
 	{ return { null_terminated, std::char_traits<wchar_t>::length( null_terminated ) }; }
 inline WStringView makeView( const std::wstring& str ) { return makeView( str.c_str() ); }
