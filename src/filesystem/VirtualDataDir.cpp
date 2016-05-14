@@ -11,12 +11,23 @@
 
 #include <algorithm>
 #include <cwctype>
+#include <iostream>
 
 using namespace std;
 
 static Mod loadMod( std::wstring filepath ){
+	Mod mod;
+	mod.name = FilePath( makeView( filepath ) ).filename().toBasicString();
 	
-	return {};
+	//Load folders
+	auto game_folders = getFolderContents( filepath );
+	mod.folders.reserve( game_folders.size() );
+	for( auto game_folder : game_folders ){
+		auto file_object = std::make_unique<PassthroughDir>( filepath + L"\\" + game_folder.name ); //TODO: more intelligent
+		mod.folders.emplace_back( game_folder.name, std::move(file_object) );
+	}
+	
+	return mod;
 }
 
 VirtualDataDir::VirtualDataDir( std::wstring filepath ) {
@@ -25,16 +36,18 @@ VirtualDataDir::VirtualDataDir( std::wstring filepath ) {
 	auto imports = getFolderContents( filepath + L"\\import" );
 	WStringView pp_ext( L".pp", 3 );
 	for( auto import : imports ){
-	//	if( !import.is_dir && makeView(import.name).endsWith( pp_ext ) )
-	//		PPCompactor::importPP( filepath + L"\\import\\" + import.name );
+//		if( !import.is_dir && makeView(import.name).endsWith( pp_ext ) )
+		//	PPCompactor::importPP( filepath + L"\\import\\" + import.name );
 	}
 	
-	auto mod_folders = getFolderContents( filepath + L"\\mods" );
+	auto mod_folders = getFolderContents( filepath + L"\\packages" );
 	mods.reserve( mod_folders.size() );
 	for( auto mod_folder : mod_folders )
 		if( mod_folder.is_dir )
 			mods.emplace_back( loadMod( mod_folder.name ) );
 	
+	for( auto& mod : mods )
+		wcout << "Mod: " << mod.name << "\n";
 	//TODO: combine mods in main/edit
 }
 
