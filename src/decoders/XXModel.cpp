@@ -3,7 +3,7 @@
 
 #include "XXModel.hpp"
 
-#include "../utils/BufferReader.hpp"
+#include "../utils/ByteViewReader.hpp"
 #include "../utils/debug.hpp"
 
 #include <iostream>
