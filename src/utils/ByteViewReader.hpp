@@ -12,14 +12,14 @@ inline uint32_t convert32unsigned( uint8_t a, uint8_t b, uint8_t c, uint8_t d )
 	{ return a + (b<<8) + (c<<16) + (d<<24); }
 
 
-class BufferReader{
+class ByteViewReader{
 	private:
 		ByteView buffer;
 		size_t position{ 0 };
 		
 	public:
-		BufferReader( ByteView view ) : buffer(view) { }
-		BufferReader( Buffer& buf ) : buffer(buf.view()) { }
+		ByteViewReader( ByteView view ) : buffer(view) { }
+		ByteViewReader( Buffer& buf ) : buffer(buf.view()) { }
 		
 		auto tell() const{ return position; }
 		auto left() const{ return buffer.size() - position; }

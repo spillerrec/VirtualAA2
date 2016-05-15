@@ -13,7 +13,7 @@ unsigned bone_size = 0;
 unsigned dupe_size = 0;
 
 XXModel::XXModel( Buffer file ) : data(std::move(file)) {
-	BufferReader reader( data );
+	ByteViewReader reader( data );
 	
 //Read header
 	auto format = reader.read32u();
@@ -66,7 +66,7 @@ static void coutName( const char* prefix, NotByteView view ){
 	std::cout << std::endl;*/
 }
 
-XXFrame::XXFrame( BufferReader& reader, int format ){
+XXFrame::XXFrame( ByteViewReader& reader, int format ){
 	name = reader.readName();
 	coutName( "Frame name: ", name );
 	
@@ -113,7 +113,7 @@ XXFrame::XXFrame( BufferReader& reader, int format ){
 //	XXFrame( reader, format );
 }
 
-XXMesh::XXMesh( BufferReader& reader, int format, int vector2count ){
+XXMesh::XXMesh( ByteViewReader& reader, int format, int vector2count ){
 	auto start = reader.tell();
 	unknown1 = reader.read( format >= 7 ? 64 : 16 );
 	index = reader.read32u();
@@ -148,7 +148,7 @@ XXMesh::XXMesh( BufferReader& reader, int format, int vector2count ){
 	mesh_size += end-start;
 }
 
-XXMaterial::XXMaterial( BufferReader& reader ){
+XXMaterial::XXMaterial( ByteViewReader& reader ){
 	name = reader.readName();
 	coutName( "Material: ", name );
 	colors = reader.read( 4*4 * 4 + 4 );
@@ -162,7 +162,7 @@ XXMaterial::XXMaterial( BufferReader& reader ){
 	unknown = reader.read( 88 ); //TODO: format < 0 ?
 }
 
-XXTexture::XXTexture( BufferReader& reader ){
+XXTexture::XXTexture( ByteViewReader& reader ){
 	name = reader.readName();
 	coutName( "Texture: ", name );
 	header = reader.read( 8*4 + 1 );

@@ -10,7 +10,7 @@
 #include <vector>
 
 class File;
-class BufferReader; //TODO:
+class ByteViewReader;
 class XXFrame;
 
 template<typename T>
@@ -28,7 +28,7 @@ class XXMesh{
 		ByteView unknown2; //Use name at end?
 		
 	public:
-		XXMesh( BufferReader& reader, int format, int vector2count );
+		XXMesh( ByteViewReader& reader, int format, int vector2count );
 };
 
 class XXFrame{
@@ -50,7 +50,7 @@ class XXFrame{
 		
 	public:
 		XXFrame() { } //TODO: Avoid?
-		XXFrame( BufferReader& reader, int format );
+		XXFrame( ByteViewReader& reader, int format );
 };
 
 class XXMaterial{
@@ -70,7 +70,7 @@ class XXMaterial{
 		ByteView unknown;
 		
 	public:
-		XXMaterial( BufferReader& reader );
+		XXMaterial( ByteViewReader& reader );
 		
 		auto size() const
 			{ return 4 + name.size() + colors.size() + sumXXSize( textures ) + unknown.size(); }
@@ -85,7 +85,7 @@ class XXTexture{
 		ByteView data;
 		
 	public:
-		XXTexture( BufferReader& reader );
+		XXTexture( ByteViewReader& reader );
 		
 		auto size() const{ return 4 + name.size() + header.size() + 4 + data.size(); }
 };

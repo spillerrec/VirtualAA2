@@ -30,7 +30,7 @@ class HeaderDecrypter{
 unsigned read32u( File& file, HeaderDecrypter& decrypter ){
 	auto buf = file.read( 4 );
 	decrypter.decrypt( buf );
-	return BufferReader( buf ).read32u();
+	return ByteViewReader( buf ).read32u();
 }
 
 const uint8_t mask[] = {
