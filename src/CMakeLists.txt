@@ -21,6 +21,7 @@ set(SOURCES_FILESYSTEM
 	filesystem/FileSystem.cpp
 	filesystem/PassthroughDir.cpp
 	filesystem/PassthroughFile.cpp
+	filesystem/PPFile.cpp
 	filesystem/VirtualDataDir.cpp
 	)
 
