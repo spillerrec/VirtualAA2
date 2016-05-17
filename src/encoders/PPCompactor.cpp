@@ -13,26 +13,6 @@
 using namespace std;
 
 
-std::wstring toWString( const std::string& str ){
-	setlocale( LC_ALL, "ja-JP" ); //TODO: "(except isdigit, isxdigit, mbstowcs, and mbtowc, which are unaffected)." ???
-	// https://msdn.microsoft.com/en-us/library/x99tb11d.aspx
-	
-	//mingw have not implemented _create_locale / _free_locale
-	//auto locale = _create_locale( LC_CTYPE, "ja-JP" );
-	
-	auto buf_size = str.size()*2; //Should be excessive
-	auto buf = std::make_unique<wchar_t[]>( buf_size );
-	
-	size_t char_converted = 0;
-	mbstowcs_s( &char_converted, buf.get(), buf_size, str.c_str(), buf_size-1 );
-	//_mbstowcs_s_l( &char_converted, buf.get(), buf_size, str.c_str(), buf_size-1, locale );
-	
-	//_free_locale( locale );
-	
-	return { buf.get(), char_converted };
-}
-
-
 void PPCompactor::importPP( std::wstring path ){
 	FilePath file_path( path.c_str() );
 	auto folder_name = file_path.folderPath();
@@ -56,7 +36,7 @@ void PPCompactor::importPP( std::wstring path ){
 	//Write sub-files
 	for( auto& f : pp.files ){
 		auto output = f.getFile( file );
-		auto wide_name = toWString( string( (char*)f.filename.data() ) );
+		auto wide_name = fromJapPath( f.filename.view() );
 		
 		File fout( (prefix + wide_name).c_str(), L"wb" );
 		fout.write( output.view() );

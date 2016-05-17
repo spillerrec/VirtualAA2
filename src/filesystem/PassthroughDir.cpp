@@ -6,12 +6,18 @@
 #include "FileSystem.hpp"
 #include "PassthroughFile.hpp"
 #include "FilePath.hpp"
+#include "PPFile.hpp"
 #include "../utils/debug.hpp"
 
 using namespace std;
 
 static unique_ptr<FileObject> makePassthrough( wstring parent, FolderContent info ){
 	auto new_path = parent + L"\\" + info.name;
+	
+	WStringView pp_prefix( L"[PP] ", 5 );
+	if( makeView(info.name).startsWith(pp_prefix) )
+		return make_unique<PPFile>( new_path );
+	
 	if( info.is_dir )
 		return make_unique<PassthroughDir>( new_path );
 	else

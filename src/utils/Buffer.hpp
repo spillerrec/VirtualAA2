@@ -15,6 +15,10 @@ class Buffer{
 	public:
 		Buffer() = default;
 		Buffer( size_t lenght ) : buffer( std::make_unique<uint8_t[]>( lenght ) ), lenght(lenght) { }
+		explicit Buffer( const uint8_t* data, size_t lenght ) : Buffer( lenght )
+			{ std::copy( data, data+lenght, buffer.get() ); }
+		explicit Buffer(      ByteView view ) : Buffer( view.begin(), view.size() ) { }
+		explicit Buffer( ConstByteView view ) : Buffer( view.begin(), view.size() ) { }
 		//Buffer( Buffer&& other ) : buffer(std::move(other.buffer)), lenght(other.lenght) {}
 		/*
 		Buffer( const Buffer& copy ) : Buffer( copy.lenght ) {

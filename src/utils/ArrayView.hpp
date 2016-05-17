@@ -37,6 +37,9 @@ class ArrayView{
 			return std::equal( begin(), end(), other.begin() );
 		}
 		
+		bool lexicographical_less( ArrayView<T> other )
+			{ return std::lexicographical_compare( begin(), end(), other.begin(), other.end() ); }
+		
 		std::basic_string<type> toBasicString() const{
 			auto buf = std::make_unique<type[]>( size() );
 			std::copy( begin(), end(), buf.get() );

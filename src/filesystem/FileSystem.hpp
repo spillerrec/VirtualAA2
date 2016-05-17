@@ -3,6 +3,8 @@
 #ifndef FILE_SYSTEM_HPP
 #define FILE_SYSTEM_HPP
 
+#include "../utils/ArrayView.hpp"
+
 #include <string>
 #include <vector>
 
@@ -19,5 +21,15 @@ struct FolderContent{
 };
 std::vector<FolderContent> getFolderContents( std::wstring path );
 bool makeFolder( std::wstring path, std::wstring name );
+
+
+std::wstring fromJapPath( const char* str, size_t lenght );
+
+inline std::wstring fromJapPath( const std::string& str )
+	{ return fromJapPath( str.c_str(), str.size() ); }
+	
+std::wstring fromJapPath( ConstByteView view );
+std::wstring fromJapPath( ByteView view );
+
 
 #endif

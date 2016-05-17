@@ -6,6 +6,7 @@
 #include <Windows.h>
 
 #include <iostream>
+#include <memory>
 
 using namespace std;
 
@@ -53,4 +54,33 @@ std::vector<FolderContent> getFolderContents( std::wstring path ){
 bool makeFolder( std::wstring path, std::wstring name ){
 	wcout << "Creating dir: " << name << " in " << path << "\n";
 	return CreateDirectory( (path + L"\\" + name).c_str(), nullptr ) != 0;
+}
+
+std::wstring fromJapPath( const char* str, size_t lenght ){
+	setlocale( LC_ALL, "ja-JP" ); //TODO: "(except isdigit, isxdigit, mbstowcs, and mbtowc, which are unaffected)." ???
+	// https://msdn.microsoft.com/en-us/library/x99tb11d.aspx
+	
+	//mingw have not implemented _create_locale / _free_locale
+	//auto locale = _create_locale( LC_CTYPE, "ja-JP" );
+	
+	auto buf_size = lenght*2; //Should be excessive
+	auto buf = std::make_unique<wchar_t[]>( buf_size );
+	
+	size_t char_converted = 0;
+	mbstowcs_s( &char_converted, buf.get(), buf_size, str, buf_size-1 );
+	//_mbstowcs_s_l( &char_converted, buf.get(), buf_size, str, buf_size-1, locale );
+	
+	//_free_locale( locale );
+	
+	return { buf.get(), char_converted-1 }; //NOTE: Remove terminating zero
+}
+
+std::wstring fromJapPath( ConstByteView view ) {
+	auto str = view.toBasicString();
+	return fromJapPath( reinterpret_cast<const char*>(str.c_str()), str.size() );
+}
+	
+std::wstring fromJapPath( ByteView view ) {
+	auto str = view.toBasicString();
+	return fromJapPath( reinterpret_cast<const char*>(str.c_str()), str.size() );
 }

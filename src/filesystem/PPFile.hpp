@@ -4,12 +4,15 @@
 #define PP_FILE_HPP
 
 #include "FileObject.hpp"
+#include "../utils/Buffer.hpp"
 
 #include <string>
 #include <vector>
 
 struct PPSubFile{
-	std::string filename;
+	std::wstring filepath;
+	Buffer filename;
+	Buffer metadata;
 	uint64_t offset;
 	uint64_t filesize;
 };
