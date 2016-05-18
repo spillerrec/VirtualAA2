@@ -13,19 +13,6 @@ class Buffer{
 		size_t lenght;
 		
 	public:
-		Buffer() = default;
-		Buffer( size_t lenght ) : buffer( std::make_unique<uint8_t[]>( lenght ) ), lenght(lenght) { }
-		explicit Buffer( const uint8_t* data, size_t lenght ) : Buffer( lenght )
-			{ std::copy( data, data+lenght, buffer.get() ); }
-		explicit Buffer(      ByteView view ) : Buffer( view.begin(), view.size() ) { }
-		explicit Buffer( ConstByteView view ) : Buffer( view.begin(), view.size() ) { }
-		//Buffer( Buffer&& other ) : buffer(std::move(other.buffer)), lenght(other.lenght) {}
-		/*
-		Buffer( const Buffer& copy ) : Buffer( copy.lenght ) {
-			for( size_t i=0; i<lenght; i++ )
-				buffer[i] = copy.buffer[i];
-		}
-		*/
 		      auto data()      { return buffer.get(); }
 		const auto data() const{ return buffer.get(); }
 		auto size() const{ return lenght; }
@@ -38,6 +25,26 @@ class Buffer{
 		
 		ArrayView<      uint8_t> view()      { return { data(), size() }; }
 		ArrayView<const uint8_t> view() const{ return { data(), size() }; }
+		
+	public:
+		Buffer() = default;
+		Buffer( size_t lenght ) : buffer( std::make_unique<uint8_t[]>( lenght ) ), lenght(lenght) { }
+		explicit Buffer( const uint8_t* data, size_t lenght ) : Buffer( lenght )
+			{ std::copy( data, data+lenght, buffer.get() ); }
+		explicit Buffer(      ByteView view ) : Buffer( view.begin(), view.size() ) { }
+		explicit Buffer( ConstByteView view ) : Buffer( view.begin(), view.size() ) { }
+		
+		Buffer( Buffer&& other ) : buffer(std::move(other.buffer)), lenght(other.lenght)
+			{ other.lenght = 0; }
+		explicit Buffer( const Buffer& copy ) : Buffer( copy.view() ) { }
+		Buffer& operator=( Buffer&& other ){
+			if( &other != this ){
+				buffer = std::move(other.buffer);
+				lenght = other.lenght;
+				other.lenght = 0;
+			}
+			return *this;
+		}
 };
 
 #endif

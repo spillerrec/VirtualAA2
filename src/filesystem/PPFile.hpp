@@ -26,6 +26,7 @@ class PPFile : public FileObject{
 		
 	public:
 		PPFile( std::wstring filepath );
+		PPFile( const PPFile& other );
 		
 		WStringView name() const override{ return filename; }
 		bool isDir() const override{ return false; }

@@ -56,13 +56,15 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 		}
 	}
 	
-	//TODO: find all filesizes
-	
 	//TODO: calculate offsets
 }
 
+PPFile::PPFile( const PPFile& other ) : filepath( other.filepath ), files( other.files ) {
+	filename = FilePath( filepath.c_str() ).filename();
+}
+
 std::unique_ptr<FileObject> PPFile::copy() const
-	{ return std::make_unique<PPFile>( filepath ); }
+	{ return std::make_unique<PPFile>( *this ); }
 
 	
 uint64_t PPFile::filesize() const{
