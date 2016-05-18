@@ -30,8 +30,6 @@ static Mod loadMod( std::wstring filepath ){
 }
 
 VirtualDataDir::VirtualDataDir( std::wstring filepath ) {
-	folders.emplace_back( std::wstring(L"aa2main"), std::make_unique<PassthroughDir>( filepath ) );
-	
 	auto imports = getFolderContents( filepath + L"\\import" );
 	WStringView pp_ext( L".pp", 3 );
 	for( auto import : imports ){

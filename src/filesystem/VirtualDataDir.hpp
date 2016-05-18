@@ -28,7 +28,6 @@ class Mod{
 class VirtualDataDir{
 	private:
 		FakeDir root;
-		std::vector<FolderImport> folders; //The folders which can be emulated
 		std::vector<Mod> mods; //The available mods
 		
 		FileObject* getFolder( const std::wstring& name );
