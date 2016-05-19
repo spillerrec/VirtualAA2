@@ -4,25 +4,10 @@
 #include "PassthroughDir.hpp"
 
 #include "FileSystem.hpp"
-#include "PassthroughFile.hpp"
 #include "FilePath.hpp"
-#include "PPFile.hpp"
-#include "../utils/debug.hpp"
+#include "FileFactory.hpp"
 
 using namespace std;
-
-static unique_ptr<FileObject> makePassthrough( wstring parent, FolderContent info ){
-	auto new_path = parent + L"\\" + info.name;
-	
-	WStringView pp_prefix( L"[PP] ", 5 );
-	if( makeView(info.name).startsWith(pp_prefix) )
-		return make_unique<PPFile>( new_path );
-	
-	if( info.is_dir )
-		return make_unique<PassthroughDir>( new_path );
-	else
-		return make_unique<PassthroughFile>( new_path );
-}
 
 PassthroughDir::PassthroughDir( std::wstring filepath )
 	:	FakeDir( FilePath( filepath.c_str() ).filename().toBasicString() ), filepath(filepath) {
@@ -30,7 +15,7 @@ PassthroughDir::PassthroughDir( std::wstring filepath )
 	auto files = getFolderContents( filepath );
 	reserve( files.size() );
 	for( auto file : files )
-		addChild( makePassthrough( filepath, file ) );
+		addChild( FileFactory::makeFileObject( filepath, file ) );
 }
 
 std::unique_ptr<FileObject> PassthroughDir::copy() const

@@ -57,6 +57,7 @@ bool makeFolder( std::wstring path, std::wstring name ){
 }
 
 std::wstring fromJapPath( const char* str, size_t lenght ){
+	//TODO: Slow as hell, fix...
 	setlocale( LC_ALL, "ja-JP" ); //TODO: "(except isdigit, isxdigit, mbstowcs, and mbtowc, which are unaffected)." ???
 	// https://msdn.microsoft.com/en-us/library/x99tb11d.aspx
 	
