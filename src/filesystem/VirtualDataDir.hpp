@@ -4,7 +4,8 @@
 #define VIRTUAL_DATA_DIR_HPP
 
 #include "FileObject.hpp"
-#include "FakeDir.hpp"
+#include "PassthroughDir.hpp"
+#include "mergers/FakeDir.hpp"
 
 #include <string>
 #include <memory>
@@ -22,7 +23,9 @@ struct FolderImport{
 class Mod{
 	public:
 		std::wstring name;
-		FakeDir folders;
+		PassthroughDir root;
+		
+		Mod( std::wstring name, std::wstring path );
 };
 
 class VirtualDataDir{
@@ -30,7 +33,7 @@ class VirtualDataDir{
 		FakeDir root;
 		std::vector<Mod> mods; //The available mods
 		
-		FileObject* getFolder( const std::wstring& name );
+		const FileObject* getFolder( const std::wstring& name );
 		
 	public:
 		VirtualDataDir( std::wstring filepath );

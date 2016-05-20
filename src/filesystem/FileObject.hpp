@@ -6,6 +6,7 @@
 #include "../utils/StringView.hpp"
 
 #include <memory>
+#include <vector>
 
 class FileHandle{
 	public:
@@ -19,6 +20,16 @@ struct Time{
 };
 
 using FileObjectId = uint64_t;
+
+template<class T>
+auto findChild( T& object, WStringView child_name ) -> decltype(&object[0]){
+	for( unsigned j=0; j<object.children(); j++ )
+		if( compareInsensitive( object[j].name(), child_name ) )
+			return &object[j];
+	return nullptr;
+}
+
+class AMergingObject;
 
 class FileObject{
 	public:
@@ -36,16 +47,24 @@ class FileObject{
 		virtual FileObjectId type() const = 0;
 		virtual uint64_t children() const{ return 0; }
 		virtual const FileObject& operator[]( int index ) const;
-		virtual       FileObject& operator[]( int index )      ; //Overwrite this if you need different behaviour from const version!
 		
-		virtual std::unique_ptr<FileObject> copy() const = 0;
+		virtual std::unique_ptr<AMergingObject> copy() const = 0;
 		
-		virtual void combine( const FileObject& with );
-		
-		      FileObject* find( WStringView child_name );
-		const FileObject* find( WStringView child_name ) const;
+		const FileObject* find( WStringView child_name ) const{ return findChild( *this, child_name ); }
 		
 		virtual ~FileObject() { }
+};
+
+class FileObjectWithChildren : public FileObject{
+	protected:
+		std::vector<std::unique_ptr<FileObject>> objects;
+		
+	public:
+		FileObject& addChild( std::unique_ptr<FileObject> child );
+		void reserve( size_t amount ){ objects.reserve( amount ); }
+		
+		uint64_t children() const override { return objects.size(); }
+		const FileObject& operator[]( int index ) const override { return *objects[index]; }
 };
 
 #endif

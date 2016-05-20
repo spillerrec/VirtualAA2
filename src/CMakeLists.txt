@@ -16,7 +16,8 @@ set(SOURCES_ENCODERS
 	)
 
 set(SOURCES_FILESYSTEM
-	filesystem/FakeDir.cpp
+	filesystem/mergers/AMergingObject.cpp
+	filesystem/mergers/FakeDir.cpp
 	filesystem/FileObject.cpp
 	filesystem/FileFactory.cpp
 	filesystem/FileSystem.cpp
@@ -28,6 +29,7 @@ set(SOURCES_FILESYSTEM
 
 set(SOURCES_UTILS
 	utils/ArrayView.cpp
+	utils/StringView.cpp
 	utils/File.cpp
 	)
 

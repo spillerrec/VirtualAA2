@@ -3,21 +3,28 @@
 #ifndef PASSTHROUGH_DIR_HPP
 #define PASSTHROUGH_DIR_HPP
 
-#include "FakeDir.hpp"
+#include "FileObject.hpp"
 
 #include <string>
 #include <vector>
 #include <memory>
 
-class PassthroughDir : public FakeDir{
+class PassthroughDir : public FileObjectWithChildren{
 	private:
 		std::wstring filepath;
+		WStringView filename;
 		
 	public:
 		PassthroughDir( std::wstring filepath );
 		
+		WStringView name() const override{ return filename; }
+		
+		bool isDir() const override{ return true; }
+		bool canWrite() const override{ return false; }
+		uint64_t filesize() const override{ return 0; }
+		
 		FileObjectId type() const override{ return 2; }
-		std::unique_ptr<FileObject> copy() const override;
+		std::unique_ptr<AMergingObject> copy() const override;
 };
 
 #endif

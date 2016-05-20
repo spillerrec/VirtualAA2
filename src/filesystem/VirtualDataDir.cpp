@@ -15,28 +15,16 @@
 
 using namespace std;
 
+Mod::Mod( std::wstring name, std::wstring path ) : name(name), root( path ) {
+	wcout << "Filepath is: " << path << "\n";
+	
+}
+
 static Mod loadMod( std::wstring filepath ){
-	Mod mod;
-	mod.name = FilePath( makeView( filepath ) ).filename().toBasicString();
-	
-	//Load folders
-	for( auto game_folder : getFolderContents( filepath ) )
-		if( game_folder.is_dir ){
-			auto file_object = std::make_unique<PassthroughDir>( filepath + L"\\" + game_folder.name ); //TODO: more intelligent
-			mod.folders.addChild( std::move(file_object) );
-		}
-	
-	return mod;
+	return Mod( FilePath( makeView( filepath ) ).filename().toBasicString(), filepath );
 }
 
 VirtualDataDir::VirtualDataDir( std::wstring filepath ) {
-	auto imports = getFolderContents( filepath + L"\\import" );
-	WStringView pp_ext( L".pp", 3 );
-	for( auto import : imports ){
-//		if( !import.is_dir && makeView(import.name).endsWith( pp_ext ) )
-		//	PPCompactor::importPP( filepath + L"\\import\\" + import.name );
-	}
-	
 	auto package_dir = filepath + L"\\packages";
 	auto mod_folders = getFolderContents( package_dir  );
 	mods.reserve( mod_folders.size() );
@@ -46,11 +34,17 @@ VirtualDataDir::VirtualDataDir( std::wstring filepath ) {
 	
 	for( auto& mod : mods ){
 		wcout << "Mod: " << mod.name << "\n";
-		root.combine( mod.folders );
+			root.combine( mod.root );
+			/* TODO: only add directories
+		for( unsigned i=0; i<mod.root.children(); i++ ){
+			wcout << "combining: " << mod.root[i].name().toBasicString() << "\n";
+			root.combine( mod.root[i] );
+		}*/
 	}
+	cout << "root-children: " << root.children() << "\n";
 }
 
-FileObject* VirtualDataDir::getFolder( const std::wstring& name )
+const FileObject* VirtualDataDir::getFolder( const std::wstring& name )
 	{ return root.find( makeView( name ) ); }
 
 const FileObject* VirtualDataDir::getFromPath( FilePath path ){

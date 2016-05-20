@@ -15,35 +15,7 @@ std::unique_ptr<FileHandle> FileObject::openAppend() const { return { nullptr };
 const FileObject& FileObject::operator[]( int index ) const
 	{ throw std::domain_error( "No children defined!" ); }
 
-void FileObject::combine( const FileObject& with ) {
-	std::wcerr << "Attempted to combine: " << with.name().toBasicString() << "\n";
-	throw std::runtime_error( "This file object does not support combining!" );
-}
-
-FileObject& FileObject::operator[]( int index )
-	{ return const_cast<FileObject&>( const_cast<const FileObject&>( *this )[index] ); }
-
-
-static bool compareInsensitive( WStringView a, WStringView b ){
-	if( a.size() != b.size() )
-		return false;
-	return std::equal( a.begin(), a.end(), b.begin()
-		,	[]( auto a, auto b ){ return towlower(a) == towlower(b); }
-		);
-}
-
-FileObject* FileObject::find( WStringView child_name ){
-	//Note, we can't de-duplicate this because operator[] is virtual
-	//What we should do instead is make an iterator, so we can simplify both
-	for( unsigned j=0; j<children(); j++ )
-		if( compareInsensitive( (*this)[j].name(), child_name ) )
-			return &(*this)[j];
-	return nullptr;
-}
-
-const FileObject* FileObject::find( WStringView child_name ) const{
-	for( unsigned j=0; j<children(); j++ )
-		if( compareInsensitive( (*this)[j].name(), child_name ) )
-			return &(*this)[j];
-	return nullptr;
+FileObject& FileObjectWithChildren::addChild( std::unique_ptr<FileObject> child ){
+	objects.emplace_back( std::move(child) );
+	return *objects.back();
 }

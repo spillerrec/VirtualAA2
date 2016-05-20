@@ -4,6 +4,7 @@
 #include "PPFile.hpp"
 #include "FileSystem.hpp"
 #include "FilePath.hpp"
+#include "mergers/PassthroughMerger.hpp"
 #include "../utils/ByteViewReader.hpp"
 #include "../utils/debug.hpp"
 #include "../utils/File.hpp"
@@ -63,8 +64,8 @@ PPFile::PPFile( const PPFile& other ) : filepath( other.filepath ), files( other
 	filename = FilePath( filepath.c_str() ).filename();
 }
 
-std::unique_ptr<FileObject> PPFile::copy() const
-	{ return std::make_unique<PPFile>( *this ); }
+std::unique_ptr<AMergingObject> PPFile::copy() const
+	{ return std::make_unique<PassthroughMerger>( *this ); } //TODO:
 
 	
 uint64_t PPFile::filesize() const{

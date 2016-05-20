@@ -3,6 +3,7 @@
 
 #include "PassthroughFile.hpp"
 #include "FilePath.hpp"
+#include "mergers/PassthroughMerger.hpp"
 #include "../utils/debug.hpp"
 #include "../utils/File.hpp"
 
@@ -12,8 +13,8 @@ PassthroughFile::PassthroughFile( std::wstring filepath ) : filepath(filepath) {
 	filename = path.path.back();
 }
 
-std::unique_ptr<FileObject> PassthroughFile::copy() const
-	{ return std::make_unique<PassthroughFile>( filepath ); }
+std::unique_ptr<AMergingObject> PassthroughFile::copy() const
+	{ return std::make_unique<PassthroughMerger>( *this ); }
 
 	
 uint64_t PassthroughFile::filesize() const{
