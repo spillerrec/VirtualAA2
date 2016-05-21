@@ -13,6 +13,25 @@
 #include <stdexcept>
 #include <iostream>
 
+const FolderContent* shiftJisBinarySearch( const std::vector<FolderContent>& array, ByteView comp ){
+	//See if we can get away with just comparing directly
+	if( shiftJisOnlySingleBytes( comp ) ){
+		auto it = std::lower_bound( array.begin(), array.end(), comp
+			,	[](auto& folder, auto& comp){ return makeView( folder.name ).lexicographical_less( comp ); }
+			);
+		return ( makeView(it->name) == comp ) ? &*it : nullptr;
+	}
+	else{
+		std::cout << "Cannot quick search: " << comp.toBasicString().c_str() << "\n";
+		//Else convert it properly
+		auto converted = fromJapPath( comp );
+		auto it = std::lower_bound( array.begin(), array.end(), converted
+			,	[](auto& folder, auto& comp){ return folder.name < comp; }
+			);
+		return ( it->name == converted ) ? &*it : nullptr;
+	}
+}
+
 PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	FilePath path( this->filepath.c_str() );
 	auto folder = path.filename();
@@ -39,20 +58,12 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	auto folder_compare = []( auto& a, auto& b ){ return a.name < b.name; };
 	std::sort( folder_files.begin(), folder_files.end(), folder_compare );
 	for( auto& file : files ){
-		//Convert file name
-		FolderContent wanted;
-		wanted.name = fromJapPath( file.filename.view() );
-		file.filepath = wanted.path( filepath );
-		
 		//Lookup in folder_files
-		auto it = std::lower_bound( folder_files.begin(), folder_files.end(), wanted, folder_compare );
-		if( it->name == wanted.name ){
-			file.filesize = it->filesize;
-		}
+		auto folder = shiftJisBinarySearch( folder_files, file.filename.view() );
+		if( folder )
+			file.filesize = folder->filesize;
 		else{
 			std::cerr << "Could not find file: \"" << file.filename.view().toBasicString().c_str() << "\"\n";
-			std::wcerr << "Could not find file: \"" << wanted.name << "\"\n";
-			std::wcerr << "Lower bound is: \"" << it->name << "\"\n";
 			throw std::runtime_error( "Could not find file!" );
 		}
 	}

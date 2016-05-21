@@ -30,14 +30,16 @@ class ArrayView{
 		      T* end()         { return data + lenght; }
 		const T* end()   const { return data + lenght; }
 		
-		bool operator==( ArrayView<T> other ) const{
+		template<typename T2>
+		bool operator==( ArrayView<T2> other ) const{
 			if( size() != other.size() )
 				return false;
 			
 			return std::equal( begin(), end(), other.begin() );
 		}
 		
-		bool lexicographical_less( ArrayView<T> other )
+		template<typename T2>
+		bool lexicographical_less( ArrayView<T2> other )
 			{ return std::lexicographical_compare( begin(), end(), other.begin(), other.end() ); }
 		
 		std::basic_string<type> toBasicString() const{

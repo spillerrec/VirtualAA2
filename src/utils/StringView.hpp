@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <vector>
 
-using StringView = ArrayView<const char>;
+using  StringView = ArrayView<const char   >;
 using WStringView = ArrayView<const wchar_t>;
 
 inline StringView makeView( const char* null_terminated )
@@ -31,6 +31,11 @@ std::vector<ArrayView<T>> split( ArrayView<T> view, T split_on ){
 	}
 	
 	return out;
+}
+
+inline bool shiftJisOnlySingleBytes( ByteView jis ){
+	auto isSingleByte = [](auto c){ return !(c & ~0x7F); };
+	return std::all_of( jis.begin(), jis.end(), isSingleByte );
 }
 
 #endif
