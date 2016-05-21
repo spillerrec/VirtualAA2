@@ -10,17 +10,8 @@ class AMergingObject : public FileObject{
 		virtual void combine( const FileObject& with );
 };
 
-class AMergingObjectWithChildren : public AMergingObject{
-	protected:
-		std::vector<std::unique_ptr<AMergingObject>> objects;
-		
+class AMergingObjectWithChildren : public FileVectorObject<AMergingObject>{
 	public:
-		AMergingObject& addChild( std::unique_ptr<AMergingObject> child );
-		void reserve( size_t amount ){ objects.reserve( amount ); }
-		
-		uint64_t children() const override { return objects.size(); }
-		const FileObject& operator[]( int index ) const override { return *objects[index]; }
-		
 		AMergingObject& operator[]( int index ){ return *objects[index]; }
 };
 

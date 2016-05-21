@@ -7,11 +7,6 @@
 
 using namespace std;
 
-AMergingObject& AMergingObjectWithChildren::addChild( unique_ptr<AMergingObject> child ){
-	objects.emplace_back( std::move(child) );
-	return *objects.back();
-}
-
 void AMergingObject::combine( const FileObject& with ) {
 	std::wcerr << "Attempted to combine: " << with.name().toBasicString() << "\n";
 	throw std::runtime_error( "This file object does not support combining!" );

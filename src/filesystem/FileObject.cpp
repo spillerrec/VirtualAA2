@@ -14,8 +14,3 @@ std::unique_ptr<FileHandle> FileObject::openAppend() const { return { nullptr };
 
 const FileObject& FileObject::operator[]( int index ) const
 	{ throw std::domain_error( "No children defined!" ); }
-
-FileObject& FileObjectWithChildren::addChild( std::unique_ptr<FileObject> child ){
-	objects.emplace_back( std::move(child) );
-	return *objects.back();
-}

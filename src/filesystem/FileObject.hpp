@@ -55,16 +55,22 @@ class FileObject{
 		virtual ~FileObject() { }
 };
 
-class FileObjectWithChildren : public FileObject{
+template<typename FileType>
+class FileVectorObject : public FileType{
 	protected:
-		std::vector<std::unique_ptr<FileObject>> objects;
+		std::vector<std::unique_ptr<FileType>> objects;
 		
 	public:
-		FileObject& addChild( std::unique_ptr<FileObject> child );
+		FileType& addChild( std::unique_ptr<FileType> child ){
+			objects.emplace_back( std::move(child) );
+			return *objects.back();
+		}
 		void reserve( size_t amount ){ objects.reserve( amount ); }
 		
 		uint64_t children() const override { return objects.size(); }
 		const FileObject& operator[]( int index ) const override { return *objects[index]; }
 };
+
+using FileObjectWithChildren = FileVectorObject<FileObject>;
 
 #endif
