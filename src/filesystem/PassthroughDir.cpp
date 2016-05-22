@@ -19,9 +19,9 @@ PassthroughDir::PassthroughDir( std::wstring filepath )
 		addChild( FileFactory::makeFileObject( filepath, file ) );
 }
 
-std::unique_ptr<AMergingObject> PassthroughDir::copy() const {
+std::unique_ptr<AMergingObject> PassthroughDir::createMerger() const {
 	auto dir = std::make_unique<FakeDir>( filename.toBasicString() );
 	for( unsigned i=0; i<objects.size(); i++ )
-		dir->addChild( objects[i]->copy() );
+		dir->addChild( objects[i]->createMerger() );
 	return std::move( dir );
 }

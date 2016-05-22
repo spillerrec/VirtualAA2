@@ -27,7 +27,7 @@ class PassthroughMerger : public AMergingObject{
 		uint64_t children() const override { return parent.children(); }
 		const FileObject& operator[]( int index ) const override { return parent[index]; }
 		
-		std::unique_ptr<AMergingObject> copy() const override
+		std::unique_ptr<AMergingObject> createMerger() const override
 			{ return std::make_unique<PassthroughMerger>( parent ); }
 };
 

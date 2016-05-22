@@ -48,7 +48,7 @@ class FileObject{
 		virtual uint64_t children() const{ return 0; }
 		virtual const FileObject& operator[]( int index ) const;
 		
-		virtual std::unique_ptr<AMergingObject> copy() const = 0;
+		virtual std::unique_ptr<AMergingObject> createMerger() const = 0;
 		
 		const FileObject* find( WStringView child_name ) const{ return findChild( *this, child_name ); }
 		

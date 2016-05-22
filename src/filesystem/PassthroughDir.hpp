@@ -24,7 +24,7 @@ class PassthroughDir : public FileObjectWithChildren{
 		uint64_t filesize() const override{ return 0; }
 		
 		FileObjectId type() const override{ return 2; }
-		std::unique_ptr<AMergingObject> copy() const override;
+		std::unique_ptr<AMergingObject> createMerger() const override;
 };
 
 #endif

@@ -75,7 +75,7 @@ PPFile::PPFile( const PPFile& other ) : filepath( other.filepath ), files( other
 	filename = FilePath( filepath.c_str() ).filename();
 }
 
-std::unique_ptr<AMergingObject> PPFile::copy() const
+std::unique_ptr<AMergingObject> PPFile::createMerger() const
 	{ return std::make_unique<PassthroughMerger>( *this ); } //TODO:
 
 	

@@ -24,7 +24,7 @@ class PassthroughFile : public FileObject{
 		std::unique_ptr<FileHandle> openWrite()  const override;
 		std::unique_ptr<FileHandle> openAppend() const override;
 		
-		std::unique_ptr<AMergingObject> copy() const override;
+		std::unique_ptr<AMergingObject> createMerger() const override;
 		
 		FileObjectId type() const override{ return 1; }
 };

@@ -13,7 +13,7 @@ PassthroughFile::PassthroughFile( std::wstring filepath ) : filepath(filepath) {
 	filename = path.path.back();
 }
 
-std::unique_ptr<AMergingObject> PassthroughFile::copy() const
+std::unique_ptr<AMergingObject> PassthroughFile::createMerger() const
 	{ return std::make_unique<PassthroughMerger>( *this ); }
 
 	

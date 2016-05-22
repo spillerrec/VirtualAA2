@@ -35,7 +35,7 @@ class PPFile : public FileObject{
 		
 		std::unique_ptr<FileHandle> openRead()   const override;
 		
-		std::unique_ptr<AMergingObject> copy() const override;
+		std::unique_ptr<AMergingObject> createMerger() const override;
 		
 		FileObjectId type() const override{ return 4; }
 };

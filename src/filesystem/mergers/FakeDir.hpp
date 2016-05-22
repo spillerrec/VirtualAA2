@@ -24,7 +24,7 @@ class FakeDir : public AMergingObjectWithChildren{
 		
 		void combine( const FileObject& with ) override;
 		
-		std::unique_ptr<AMergingObject> copy() const override;
+		std::unique_ptr<AMergingObject> createMerger() const override;
 		
 		FileObjectId type() const override{ return 3; }
 };

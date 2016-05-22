@@ -11,15 +11,15 @@ void FakeDir::combine( const FileObject& with ){
 		if( object )
 			object->combine( with[i] );
 		else
-			addChild( with[i].copy() );
+			addChild( with[i].createMerger() );
 	}
 }
 
-std::unique_ptr<AMergingObject> FakeDir::copy() const{
+std::unique_ptr<AMergingObject> FakeDir::createMerger() const{
 	auto out = std::make_unique<FakeDir>( filename );
 	out->objects.reserve( objects.size() );
 	for( auto& object : objects )
-		out->objects.push_back( object->copy() );
+		out->objects.push_back( object->createMerger() );
 	return out;
 }
 
