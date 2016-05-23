@@ -3,29 +3,21 @@
 #ifndef VIRTUAL_DATA_DIR_HPP
 #define VIRTUAL_DATA_DIR_HPP
 
-#include "FileObject.hpp"
 #include "PassthroughDir.hpp"
 #include "mergers/FakeDir.hpp"
 
 #include <string>
-#include <memory>
 #include <vector>
 
 class FilePath;
-
-struct FolderImport{
-	std::wstring name;
-	std::unique_ptr<FileObject> folder;
-	FolderImport( std::wstring name, std::unique_ptr<FileObject> folder )
-		:	name(std::move(name)), folder(std::move(folder)) { }
-};
 
 class Mod{
 	public:
 		std::wstring name;
 		PassthroughDir root;
 		
-		Mod( std::wstring name, std::wstring path );
+		Mod( std::wstring name, std::wstring path ) : name(name), root( path ) { }
+		Mod( std::wstring path );
 };
 
 class VirtualDataDir{
