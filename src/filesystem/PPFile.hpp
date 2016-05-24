@@ -10,11 +10,9 @@
 #include <vector>
 
 struct PPSubFile{
-	std::wstring filepath;
-	Buffer filename;
-	Buffer metadata;
-	uint64_t offset;
-	uint64_t filesize;
+	ByteView filename;
+	ByteView metadata;
+	std::unique_ptr<FileObject> file;
 };
 
 class PPFile : public FileObject{
@@ -22,11 +20,11 @@ class PPFile : public FileObject{
 		std::wstring filepath;
 		WStringView filename;
 		
+		Buffer header;
 		std::vector<PPSubFile> files;
 		
 	public:
 		PPFile( std::wstring filepath );
-		PPFile( const PPFile& other );
 		
 		WStringView name() const override{ return filename; }
 		bool isDir() const override{ return false; }

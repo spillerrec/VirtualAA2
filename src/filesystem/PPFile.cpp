@@ -4,6 +4,7 @@
 #include "PPFile.hpp"
 #include "FileSystem.hpp"
 #include "FilePath.hpp"
+#include "FileFactory.hpp"
 #include "mergers/PassthroughMerger.hpp"
 #include "../utils/ByteViewReader.hpp"
 #include "../utils/debug.hpp"
@@ -46,8 +47,8 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	//NOTE: We should change the format so it contains the amount of subfiles
 	while( reader.left() > 0 ){
 		PPSubFile subfile;
-		subfile.filename = Buffer( reader.readName() );
-		subfile.metadata = Buffer( reader.read( 20 ) );
+		subfile.filename = reader.readName();
+		subfile.metadata = reader.read( 20 );
 		
 		files.emplace_back( std::move(subfile) );
 	}
@@ -59,20 +60,14 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	std::sort( folder_files.begin(), folder_files.end(), folder_compare );
 	for( auto& file : files ){
 		//Lookup in folder_files
-		auto folder = shiftJisBinarySearch( folder_files, file.filename.view() );
+		auto folder = shiftJisBinarySearch( folder_files, file.filename );
 		if( folder )
-			file.filesize = folder->filesize;
+			file.file = FileFactory::makeFileObject( filepath, *folder );
 		else{
-			std::cerr << "Could not find file: \"" << file.filename.view().toBasicString().c_str() << "\"\n";
+			std::cerr << "Could not find file: \"" << file.filename.toBasicString().c_str() << "\"\n";
 			throw std::runtime_error( "Could not find file!" );
 		}
 	}
-	
-	//TODO: calculate offsets
-}
-
-PPFile::PPFile( const PPFile& other ) : filepath( other.filepath ), files( other.files ) {
-	filename = FilePath( filepath.c_str() ).filename();
 }
 
 std::unique_ptr<AMergingObject> PPFile::createMerger() const
@@ -83,7 +78,7 @@ uint64_t PPFile::filesize() const{
 	//TODO: calculate header size
 	auto header_size = 0u;
 	return header_size + std::accumulate( files.begin(), files.end(), 0u
-		,	[](uint64_t acc, const PPSubFile& file){ return acc + file.filesize; } );
+		,	[](uint64_t acc, const PPSubFile& file){ return acc + file.file->filesize(); } );
 }
 
 class PPFileHandle : public FileHandle{
