@@ -5,7 +5,7 @@
 #include "FileSystem.hpp"
 #include "FilePath.hpp"
 #include "FileFactory.hpp"
-#include "mergers/PassthroughMerger.hpp"
+#include "mergers/MergedPPFile.hpp"
 #include "../utils/ByteViewReader.hpp"
 #include "../utils/debug.hpp"
 #include "../utils/File.hpp"
@@ -70,36 +70,7 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	}
 }
 
-std::unique_ptr<AMergingObject> PPFile::createMerger() const
-	{ return std::make_unique<PassthroughMerger>( *this ); } //TODO:
-
-	
-uint64_t PPFile::filesize() const{
-	//TODO: calculate header size
-	auto header_size = 0u;
-	return header_size + std::accumulate( files.begin(), files.end(), 0u
-		,	[](uint64_t acc, const PPSubFile& file){ return acc + file.file->filesize(); } );
+std::unique_ptr<AMergingObject> PPFile::createMerger() const {
+	return std::make_unique<MergedPPFile>( filename.toBasicString(), files );
 }
-
-class PPFileHandle : public FileHandle{
-	private:
-		const PPFile& pp;
-		
-	public:
-		PPFileHandle( const PPFile& pp )
-			:	pp( pp ) { }
-		
-		uint64_t read( ByteView to_read, uint64_t offset ) override{
-			//TODO:
-			return 0;
-		}
-
-		uint64_t write( ConstByteView to_write, uint64_t offset ) override{
-			//TODO: throw exception
-			return 0;
-		}
-};
-
-std::unique_ptr<FileHandle> PPFile::openRead() const
-	{ return std::make_unique<PPFileHandle>( *this ); }
 

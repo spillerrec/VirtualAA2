@@ -18,6 +18,7 @@ set(SOURCES_ENCODERS
 set(SOURCES_FILESYSTEM
 	filesystem/mergers/AMergingObject.cpp
 	filesystem/mergers/FakeDir.cpp
+	filesystem/mergers/MergedPPFile.cpp
 	filesystem/FileObject.cpp
 	filesystem/FileFactory.cpp
 	filesystem/FileSystem.cpp

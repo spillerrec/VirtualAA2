@@ -29,9 +29,6 @@ class PPFile : public FileObject{
 		WStringView name() const override{ return filename; }
 		bool isDir() const override{ return false; }
 		bool canWrite() const override{ return false; }
-		uint64_t filesize() const override;
-		
-		std::unique_ptr<FileHandle> openRead()   const override;
 		
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
