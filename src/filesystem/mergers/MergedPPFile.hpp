@@ -14,6 +14,10 @@ struct PPSubFileReference{
 	uint64_t offset{ 0u };
 	
 	PPSubFileReference( const PPSubFile& parent ) : parent(parent) { }
+	
+	auto filesize() const{ return parent.file->filesize(); }
+	
+	bool operator<( uint64_t offset ) const{ return filesize() < offset; }
 };
 
 class MergedPPFile : public AMergingObject{
@@ -21,6 +25,11 @@ class MergedPPFile : public AMergingObject{
 		std::wstring filename;
 		
 		std::vector<PPSubFileReference> files;
+		
+		uint64_t header_size() const;
+		
+		PPSubFileReference fileFromOffset( uint64_t offset ) const
+			{ return *std::lower_bound( files.begin(), files.end(), offset ); }
 		
 	public:
 		MergedPPFile( std::wstring filename ) : filename(filename) { }

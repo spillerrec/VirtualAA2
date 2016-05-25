@@ -3,18 +3,32 @@
 
 #include "MergedPPFile.hpp"
 
+uint64_t MergedPPFile::header_size() const{
+	auto magic_size = 8 + 4 + 1; //magic, version, unknown1
+	return magic_size + ( 260 + 4 + 4 + 20 ) * files.size(); // ( name, offset, size, meta )
+}
+
 void MergedPPFile::addPP( const std::vector<PPSubFile>& subfiles ){
+	//Add new files
 	for( auto& subfile : subfiles )
 		files.emplace_back( subfile ); //TODO: check for collisions
-	//TODO: update offsets
+	
+	//Update offsets
+	auto offset = header_size();
+	for( auto& file : files ){
+		file.offset = offset;
+		offset += file.filesize();
+	}
 }
 
 uint64_t MergedPPFile::filesize() const{
-	//TODO: calculate header size
-	auto header_size = 0u;
-	return header_size + std::accumulate( files.begin(), files.end(), 0u
+	//Sum of all sub-files
+	auto data_size = std::accumulate( files.begin(), files.end(), 0u
 		,	[](uint64_t acc, const PPSubFileReference& file)
-				{ return acc + file.parent.file->filesize(); } );
+				{ return acc + file.filesize(); }
+		);
+	
+	return header_size() + data_size;
 }
 
 class PPFileHandle : public FileHandle{
@@ -30,10 +44,8 @@ class PPFileHandle : public FileHandle{
 			return 0;
 		}
 
-		uint64_t write( ConstByteView to_write, uint64_t offset ) override{
-			//TODO: throw exception
-			return 0;
-		}
+		uint64_t write( ConstByteView to_write, uint64_t offset ) override
+			{ throw std::logic_error( "Trying to write on a no-write PPFileHandle" ); }
 };
 
 std::unique_ptr<FileHandle> MergedPPFile::openRead() const
