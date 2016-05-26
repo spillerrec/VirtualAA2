@@ -26,8 +26,6 @@ class MergedPPFile : public AMergingObject{
 		
 		std::vector<PPSubFileReference> files;
 		
-		uint64_t header_size() const;
-		
 		PPSubFileReference fileFromOffset( uint64_t offset ) const
 			{ return *std::lower_bound( files.begin(), files.end(), offset ); }
 		
@@ -37,6 +35,7 @@ class MergedPPFile : public AMergingObject{
 			: MergedPPFile(filename) { addPP( files ); }
 		
 		void addPP( const std::vector<PPSubFile>& files );
+		uint64_t headerSize() const;
 		
 		WStringView name() const override{ return makeView( filename ); }
 		bool isDir() const override{ return false; }
