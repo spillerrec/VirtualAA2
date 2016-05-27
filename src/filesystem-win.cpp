@@ -212,18 +212,12 @@ void DOKAN_CALLBACK CloseFile( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
 
 }
 
-int wmain( int argc, wchar_t* argv[] ){
-	if( argc < 2 ){
-		std::cout << "VirtualAA2 <path-to-aa2-data-dir> [mount-point]\n";
-		return -1;
-	}
-	auto data_dir_path = argv[1];
-	
+int startFilesystem( const wchar_t* data_dir_path, const wchar_t* mount_point ){
 	_DOKAN_OPTIONS options = { 0 };
 	options.Version = 100;
 	options.ThreadCount = 1; //TODO: for now
 	//options.GlobalContext = 0;
-	options.MountPoint = argc < 3 ? L"v" : argv[2];
+	options.MountPoint = mount_point;
 	
 	VirtualDataDir data_dir( data_dir_path );
 	setRoot( options, data_dir );

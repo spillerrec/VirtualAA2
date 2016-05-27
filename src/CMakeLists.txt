@@ -33,11 +33,13 @@ set(SOURCES_UTILS
 	utils/StringView.cpp
 	utils/File.cpp
 	)
+	
+set(SOURCES_USER_FILESYSTEM filesystem-win.cpp)
 
 # add_executable(testing ${SOURCES_DECODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} main.cpp)
 
 ADD_DEFINITIONS(-DUNICODE)
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode" )
 
-add_executable(VirtualAA2 ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} main-dokan.cpp)
+add_executable(VirtualAA2 ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} main.cpp)
 target_link_libraries(VirtualAA2 -ldokan1)
