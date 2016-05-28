@@ -15,6 +15,7 @@ extern "C"{
 #include "filesystem/FilePath.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 
+/*** Assigns a filesize to the high/low format used in the win32 API */
 static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
 	ULARGE_INTEGER large;
 	large.QuadPart = filesize;
@@ -50,15 +51,19 @@ struct PersistentFileObject{
 		}
 };
 
+/*** Stores a handle in the file_info */
 void handleToContext( PDOKAN_FILE_INFO file_info, PersistentFileObject* handle )
 	{ file_info->Context = reinterpret_cast<ULONG64>( handle ); }
 
+/*** Retrieves handle from file_info */
 PersistentFileObject* contextToHandle( PDOKAN_FILE_INFO file_info )
 	{ return reinterpret_cast<PersistentFileObject*>( file_info->Context ); }
 
+/*** Sets the root directory to the global context in Dokan */
 static void setRoot( _DOKAN_OPTIONS& options, VirtualDataDir& root_dir )
 	{ options.GlobalContext = reinterpret_cast<ULONG64>( &root_dir ); }
 
+/*** Retrives the root directory stored in the global context in Dokan */
 static VirtualDataDir& getRoot( PDOKAN_FILE_INFO file_info )
 	{ return *reinterpret_cast<VirtualDataDir*>( file_info->DokanOptions->GlobalContext ); }
 
@@ -166,7 +171,7 @@ NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_I
 	
 	setFileSize( info->nFileSizeHigh, info->nFileSizeLow, dir->filesize() );
 	
-	//For files: FILE_ATTRIBUTE_READONLY
+	//TODO: For files: FILE_ATTRIBUTE_READONLY
 	
 	return STATUS_SUCCESS;
 }
@@ -177,17 +182,20 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 		return STATUS_OBJECT_NAME_NOT_FOUND;
 	
 	for( uint64_t i=0; i<dir->children(); i++ ){
+		WIN32_FIND_DATA file = { 0 };
 		auto& child = (*dir)[i];
 		
-		WIN32_FIND_DATA file = { 0 };
+		//Set attributes
 		file.dwFileAttributes = child.isDir() ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 		setFileSize( file.nFileSizeHigh, file.nFileSizeLow, child.filesize() );
 		
+		//Copy file name
 		auto name = child.name();
 		require( name.size() < MAX_PATH );
 		for( unsigned j=0; j<name.size(); j++ )
 			file.cFileName[j] = name[j];
 		
+		//Add file using callback
 		if( insert( &file, file_info ) != 0 )
 			return STATUS_INTERNAL_ERROR;
 	}
@@ -196,8 +204,8 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 }
 
 void DOKAN_CALLBACK Cleanup( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
-	PersistentFileObject* file = contextToHandle( file_info );
-	
+	//Free handle if it exists
+	auto file = contextToHandle( file_info );
 	if( file ){
 		delete file;
 		file_info->Context = 0;
@@ -213,17 +221,17 @@ void DOKAN_CALLBACK CloseFile( LPCWSTR filename, PDOKAN_FILE_INFO file_info ){
 }
 
 int startFilesystem( const wchar_t* data_dir_path, const wchar_t* mount_point ){
+	//Configure Dokan
 	_DOKAN_OPTIONS options = { 0 };
 	options.Version = 100;
 	options.ThreadCount = 1; //TODO: for now
-	//options.GlobalContext = 0;
 	options.MountPoint = mount_point;
 	
 	VirtualDataDir data_dir( data_dir_path );
 	setRoot( options, data_dir );
 	
+	//Assign all the callbacks
 	_DOKAN_OPERATIONS func = { 0 };
-	
 	using namespace VirtualAA2;
 	func.ZwCreateFile = CreateFile;
 	func.ReadFile = ReadFile;
@@ -233,10 +241,10 @@ int startFilesystem( const wchar_t* data_dir_path, const wchar_t* mount_point ){
 	func.Cleanup = Cleanup;
 	func.CloseFile = CloseFile;
 	
+	//Start Dokan
 	auto result = DokanMain( &options, &func );
-	if( result != 0 ){
+	if( result != 0 )
 		std::cout << "Something went wrong";
-	}
 	
 	return result;
 }
