@@ -31,13 +31,25 @@ auto findChild( T& object, WStringView child_name ) -> decltype(&object[0]){
 
 class AMergingObject;
 
+/** Virtual file which may contain children */
 class FileObject{
 	public:
+		/** Name of the file/dir as used in the path */
 		virtual WStringView name() const = 0;
+		
+		/** @return true if this is a directory */
 		virtual bool isDir() const = 0;
+		
+		/** @return the Time this file was created */
 		virtual Time created()  const{ return {}; }
+		
+		/** @return the Time this file was last modified */
 		virtual Time modified() const{ return {}; }
+		
+		/** @return true if it is possible to write to the file */
 		virtual bool canWrite() const = 0;
+		
+		/** @return the amount of bytes which can be read from the file */
 		virtual uint64_t filesize() const{ return 0; }
 		
 		virtual std::unique_ptr<FileHandle> openRead()   const;
@@ -45,11 +57,22 @@ class FileObject{
 		virtual std::unique_ptr<FileHandle> openAppend() const;
 		
 		virtual FileObjectId type() const = 0;
+		
+		/** @return the amount of children for this directory */
 		virtual uint64_t children() const{ return 0; }
+		
+		/** Accessors to child FileObjects
+		 *  @param index the index of the child to access
+		 *  @return The FileObject */
 		virtual const FileObject& operator[]( int index ) const;
 		
+		/** @return AMerginObject were this object was already added to it.
+		 *  The lifetime of the returned object is required to be shorter than this */
 		virtual std::unique_ptr<AMergingObject> createMerger() const = 0;
 		
+		/** Find a child object with the specified name
+		 *  @param child_name A string with matching contents to the name() of the wanted object
+		 *  @return Pointer to the object, or nullptr if none were found */
 		const FileObject* find( WStringView child_name ) const{ return findChild( *this, child_name ); }
 		
 		virtual ~FileObject() { }
