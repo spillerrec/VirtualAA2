@@ -18,6 +18,9 @@ static uint64_t convertFileSize( DWORD high, DWORD low ){
 	return large.QuadPart;
 }
 
+static uint64_t convertTime( FILETIME t )
+	{ return { convertFileSize( t.dwHighDateTime, t.dwLowDateTime ) }; }
+
 static FolderContent fromFindData( const WIN32_FIND_DATA& data ){
 	FolderContent file;
 	
@@ -25,10 +28,9 @@ static FolderContent fromFindData( const WIN32_FIND_DATA& data ){
 	file.name = wstring{ data.cFileName };
 	file.filesize = convertFileSize( data.nFileSizeHigh, data.nFileSizeLow );
 	
-	//TODO:
-	file.creation_time = 0;
-	file.access_time   = 0;
-	file.modified_time = 0;
+	file.creation_time = convertTime( data.ftCreationTime );
+	file.access_time   = convertTime( data.ftLastAccessTime );
+	file.modified_time = convertTime( data.ftLastWriteTime );
 	
 	return file;
 }

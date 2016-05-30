@@ -3,27 +3,20 @@
 
 #include "PassthroughFile.hpp"
 #include "FilePath.hpp"
+#include "FileSystem.hpp"
 #include "mergers/PassthroughMerger.hpp"
 #include "../utils/debug.hpp"
 #include "../utils/File.hpp"
 
-PassthroughFile::PassthroughFile( std::wstring filepath ) : filepath(filepath) {
-	FilePath path( this->filepath.c_str() );
+PassthroughFile::PassthroughFile( const std::wstring& parent, FolderContent fileinfo )
+	:	fileinfo(fileinfo), filepath(fileinfo.path(parent)) {
+	FilePath path( filepath.c_str() );
 	require( path.path.size() > 0 );
 	filename = path.path.back();
 }
 
 std::unique_ptr<AMergingObject> PassthroughFile::createMerger() const
 	{ return std::make_unique<PassthroughMerger>( *this ); }
-
-	
-uint64_t PassthroughFile::filesize() const{
-	__stat64 stat = { 0 };
-	if( _wstat64( filepath.c_str(), &stat ) == 0 )
-		return stat.st_size;
-	else
-		return 0;
-}
 
 class PassthroughFileHandle : public FileHandle{
 	private:

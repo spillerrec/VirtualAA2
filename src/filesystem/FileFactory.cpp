@@ -21,5 +21,5 @@ std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderC
 	if( info.is_dir )
 		return make_unique<PassthroughDir>( path );
 	else
-		return make_unique<PassthroughFile>( path );
+		return make_unique<PassthroughFile>( parent, info );
 }

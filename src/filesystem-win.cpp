@@ -23,6 +23,15 @@ static void setFileSize( DWORD& high, DWORD& low, int64_t filesize ){
 	low  = large.LowPart;
 }
 
+/** Converts a Time to a FILETIME
+ *  @param t The Time to convert
+ *  @return The resulting FILETIME structure */
+static FILETIME toFileTime( Time t ){
+	FILETIME out;
+	setFileSize( out.dwHighDateTime, out.dwLowDateTime, t.unix );
+	return out;
+}
+
 struct PersistentFileObject{
 	public:
 		const FileObject* object;
@@ -165,9 +174,9 @@ NTSTATUS DOKAN_CALLBACK GetFileInformation( LPCWSTR filename, LPBY_HANDLE_FILE_I
 	
 	info->dwFileAttributes = dir->isDir() ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 	
-	info->ftCreationTime   = { 0 };
+	info->ftCreationTime   = toFileTime( dir->created() );
 	info->ftLastAccessTime = { 0 };
-	info->ftLastWriteTime  = { 0 };
+	info->ftLastWriteTime  = toFileTime( dir->modified() );
 	
 	setFileSize( info->nFileSizeHigh, info->nFileSizeLow, dir->filesize() );
 	
@@ -188,6 +197,8 @@ NTSTATUS DOKAN_CALLBACK FindFiles( LPCWSTR path, PFillFindData insert, PDOKAN_FI
 		//Set attributes
 		file.dwFileAttributes = child.isDir() ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
 		setFileSize( file.nFileSizeHigh, file.nFileSizeLow, child.filesize() );
+		file.ftCreationTime   = toFileTime( child.created() );
+		file.ftLastWriteTime  = toFileTime( child.modified() );
 		
 		//Copy file name
 		auto name = child.name();

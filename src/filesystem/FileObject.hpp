@@ -84,10 +84,14 @@ class FileVectorObject : public FileType{
 		std::vector<std::unique_ptr<FileType>> objects;
 		
 	public:
+		/** Add a child object
+		 *  @return The added child object (for convenience) */
 		FileType& addChild( std::unique_ptr<FileType> child ){
 			objects.emplace_back( std::move(child) );
 			return *objects.back();
 		}
+		
+		/** @param amount The amount of preallocated elements to reserve */
 		void reserve( size_t amount ){ objects.reserve( amount ); }
 		
 		uint64_t children() const override { return objects.size(); }
