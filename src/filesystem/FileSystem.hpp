@@ -9,13 +9,15 @@
 #include <vector>
 
 struct FolderContent{
-	bool is_dir;
-	std::wstring name;
-	uint64_t filesize;
-	uint64_t creation_time;
-	uint64_t access_time;
-	uint64_t modified_time;
+	bool is_dir; ///True if this is a directory
+	std::wstring name; ///The name of this file/dir
+	uint64_t filesize; ///The filesize, likely only set if !is_dir
+	uint64_t creation_time; ///unix timestamp of file creation
+	uint64_t access_time; ///unix timestamp of last read access
+	uint64_t modified_time; ///unix timestamp of last write access
 	
+	/** @return The entire file path of this object
+	 *  @param parent The file path of the parent directory without an ending "\\" */
 	std::wstring path( const std::wstring& parent )
 		{ return parent + L"\\" + name; }
 };

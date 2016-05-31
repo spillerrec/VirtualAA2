@@ -35,6 +35,9 @@ static FolderContent fromFindData( const WIN32_FIND_DATA& data ){
 	return file;
 }
 
+/** Returns a vector of all children in a directory
+ *  @param path file path of the directory
+ *  @return A vector of FolderContent for every object in the directory */
 std::vector<FolderContent> getFolderContents( std::wstring path ){
 	WIN32_FIND_DATA find_data;
 	auto handle = FindFirstFile( (path + L"\\*").c_str(), &find_data );
@@ -53,12 +56,20 @@ std::vector<FolderContent> getFolderContents( std::wstring path ){
 	return children;
 }
 
+/** Create a new directory in an existing directory
+ *  @param path filepath of parent directory
+ *  @param name name of the new directory
+ *  @return true if the directory was created */
 bool makeFolder( std::wstring path, std::wstring name ){
 	wcout << "Creating dir: " << name << " in " << path << "\n";
 	return CreateDirectory( (path + L"\\" + name).c_str(), nullptr ) != 0;
 }
 
-std::wstring fromJapPath( const char* str, size_t lenght ){
+/** Convert a Shift-JIS encoded string to a wide-string
+ *  @param str null terminated Shift-JIS string
+ *  @param length amount of characters in str
+ *  @return The wide-string representation of str */
+std::wstring fromJapPath( const char* str, size_t length ){
 	//TODO: Slow as hell, fix...
 	setlocale( LC_ALL, "ja-JP" ); //TODO: "(except isdigit, isxdigit, mbstowcs, and mbtowc, which are unaffected)." ???
 	// https://msdn.microsoft.com/en-us/library/x99tb11d.aspx
@@ -66,7 +77,7 @@ std::wstring fromJapPath( const char* str, size_t lenght ){
 	//mingw have not implemented _create_locale / _free_locale
 	//auto locale = _create_locale( LC_CTYPE, "ja-JP" );
 	
-	auto buf_size = lenght*2; //Should be excessive
+	auto buf_size = length*2; //Should be excessive
 	auto buf = std::make_unique<wchar_t[]>( buf_size );
 	
 	size_t char_converted = 0;
