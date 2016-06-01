@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string>
 
+/** Access to a sequential area of memory of type T */
 template<typename T>
 class ArrayView{
 	protected:
@@ -21,7 +22,12 @@ class ArrayView{
 		
 		using type = typename std::remove_cv<T>::type;
 		
+		/// @return The length of the view
 		auto size() const{ return lenght; }
+		
+		/** Access an element in the view
+		 *  @param index The index of the element
+		 *  @return The element at index */
 		T& operator[]( int index )       { return data[index]; } //TODO: Check in debug mode
 		T  operator[]( int index ) const { return data[index]; } //TODO: Check in debug mode
 		
@@ -42,28 +48,39 @@ class ArrayView{
 		bool lexicographical_less( ArrayView<T2> other )
 			{ return std::lexicographical_compare( begin(), end(), other.begin(), other.end() ); }
 		
+		/// @return This view copied to a std::basic_string
 		std::basic_string<type> toBasicString() const{
 			auto buf = std::make_unique<type[]>( size() );
 			std::copy( begin(), end(), buf.get() );
 			return std::basic_string<type>( buf.get(), size() );
 		}
 		
+		/// @return true if this view starts with the contents of that
 		bool startsWith( ArrayView<T> that ) const {
 			if( that.size() > size() )
 				return false;
 			return std::equal( that.begin(), that.end(), begin() );
 		}
+		
+		/// @return true if this view ends with the contents of that
 		bool endsWith( ArrayView<T> that ) const {
 			if( that.size() > size() )
 				return false;
 			return std::equal( that.begin(), that.end(), end()-that.size() );
 		}
 		
+		/// @return An iterator to the first occurrence of needle, or end() if not found
 		auto find( const T& needle ) const { return std::find( begin(), end(), needle ); }
+		
+		/// @return The index of the first occurrence of needle, or size() if not found
 		auto findIndex( const T& needle ) const{ return find( needle ) - begin(); }
 		
 		ArrayView<T> subView( int start, size_t amount ){ return { data+start, amount }; } //TODO: check range in debug mode
+		
+		/// @return A new view containing 'amount' of elements from the start
 		ArrayView<T> left(  size_t amount ){ return subView( 0, amount ); }
+		
+		/// @return A new view containing 'amount' of elements from the end
 		ArrayView<T> right( size_t amount ){ return subView( size()-amount, amount ); }
 };
 
