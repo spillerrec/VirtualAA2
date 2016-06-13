@@ -32,7 +32,7 @@ static int copy_file( const wchar_t* data_dir_path, const wchar_t* filepath, con
 	std::cout << "Starting to read\n";
 	while( (bytes_read = handle->read( read_buffer.view(), offset )) > 0 ){
 		std::cout << "read: " << bytes_read << std::endl;
-		out.write( read_buffer );
+		out.write( read_buffer.view().left( bytes_read ) );
 		offset += bytes_read;
 	}
 	
@@ -55,7 +55,6 @@ int wmain( int argc, wchar_t* argv[] ){
 			return error( "Unknown parameter" );
 	}
 	else{
-		return error( "Did not start with --copy" );
 		auto data_dir_path = argv[1];
 		auto mount_point = argc < 3 ? L"v" : argv[2];
 		
