@@ -3,7 +3,7 @@
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 template<typename T1, typename T2>

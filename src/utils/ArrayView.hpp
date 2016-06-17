@@ -3,11 +3,14 @@
 #ifndef ARRAY_VIEW_HPP
 #define ARRAY_VIEW_HPP
 
+#include "debug.hpp"
+
 #include <algorithm>
 #include <memory>
 #include <type_traits>
 #include <stdint.h>
 #include <string>
+
 
 /** Access to a sequential area of memory of type T */
 template<typename T>
@@ -78,10 +81,16 @@ class ArrayView{
 		ArrayView<T> subView( int start, size_t amount ){ return { data+start, amount }; } //TODO: check range in debug mode
 		
 		/// @return A new view containing 'amount' of elements from the start
-		ArrayView<T> left(  size_t amount ){ return subView( 0, amount ); }
+		ArrayView<T> left(  size_t amount ){
+			require( amount <= size() );
+			return subView( 0, amount );
+		}
 		
 		/// @return A new view containing 'amount' of elements from the end
-		ArrayView<T> right( size_t amount ){ return subView( size()-amount, amount ); }
+		ArrayView<T> right( size_t amount ){
+			require( amount <= size() );
+			return subView( size()-amount, amount );
+		}
 };
 
 using      ByteView = ArrayView<      uint8_t>;

@@ -29,6 +29,7 @@ struct SubFile{
 class PPArchive{
 	public:
 		static const uint8_t magic[];
+		static const int magic_length = 8;
 		std::vector<PP::SubFile> files;
 		
 	public:
