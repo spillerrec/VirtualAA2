@@ -40,8 +40,8 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	filename = folder.right(folder.size()-5);
 	
 	//Read header file
-	auto header_data = File( (filepath + L"\\__HEADER").c_str(), L"rb" ).readAll();
-	ByteViewReader reader( header_data );
+	header = File( (filepath + L"\\__HEADER").c_str(), L"rb" ).readAll();
+	ByteViewReader reader( header );
 	
 	//Parse __HEADER contents
 	//NOTE: We should change the format so it contains the amount of subfiles
