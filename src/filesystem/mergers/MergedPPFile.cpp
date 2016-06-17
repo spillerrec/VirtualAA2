@@ -40,22 +40,29 @@ struct OffsetView{
 	
 	OffsetView( ByteView view, uint64_t offset ) : view(view), offset(offset) { }
 	
-	auto splitPos( uint64_t position ) const
-		{ return uint64_t(std::max( int64_t(position) - int64_t(offset), int64_t(0) )); }
+	uint64_t splitPos( uint64_t position ) const{
+		auto relative = int64_t(position) - int64_t(offset);
+		//Truncate to be within range of view
+		return std::min( uint64_t(std::max( relative, int64_t(0) )), view.size() );
+	}
 		
 	OffsetView leftAt( uint64_t position )
-		{ return { view.left( std::min( splitPos(position), view.size() ) ), offset }; }
+		{ return { view.left( splitPos(position) ), offset }; }
 	
-	OffsetView rightAt( uint64_t position )
-		{ return { view.right( std::min(view.size() - splitPos(position), view.size()) ), offset }; }
+	OffsetView rightAt( uint64_t position ){
+		auto bytes = view.size() - splitPos(position);
+		return { view.right( bytes ), offset + view.size() - bytes };
+	}
 	
-	void copyFrom( ConstByteView data ){
-		for( unsigned i=0; i<std::min(view.size(), data.size()); i++ )
-			view[i] = data[i];
+	template<typename T>
+	void copyFrom( ArrayView<T> data, uint64_t offset=0 ){
+		if( offset < data.size() )
+			for( unsigned i=0; i<std::min(view.size(), data.size()-offset); i++ )
+				view[i] = data[i+offset];
 	}
 	
 	OffsetView debug( const char* name ) const{
-		//std::cout << name << ", offset: " << offset << " with size: " << view.size() << "\n";
+		std::cout << name << ", offset: " << offset << " with size: " << view.size() << "\n";
 		return *this;
 	}
 };
@@ -63,27 +70,52 @@ struct OffsetView{
 class PPFileHandle : public FileHandle{
 	private:
 		const MergedPPFile& pp;
+		static const uint64_t header_header_size = { 8 + 4 + 1 };
+		static const uint64_t header_file_size = { 260 + 4 + 4 + 20 }; //288
 		
+		//TODO: assert in all of those, expected end is the same as bytes read?
 		uint64_t readHeaderHeader( OffsetView view ){
 			view.debug( "header-header" );
 			auto magic = view.leftAt( PPArchive::magic_length );
-			magic.copyFrom( { PPArchive::magic, PPArchive::magic_length } );
-			//TODO: magic 8, version 4, unknown 1
-			return magic.view.size();
+			magic.copyFrom( ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
+			
+			auto rest = view.rightAt( PPArchive::magic_length ).leftAt( header_header_size );
+			//TODO: version 4, unknown 1
+			
+			return magic.view.size() + rest.view.size();
 		}
-		uint64_t readHeaderFile( OffsetView view ){
-			//TODO:
-			return 0;
+		uint64_t readHeaderFile( const PPSubFileReference& file, OffsetView view, uint64_t position ){
+			if( view.view.size() > 0 ){
+				//Make untouched bytes null
+				for( auto& val : view.view )
+					val = 0;
+				
+				//Write filename
+				auto filename = view.leftAt( position+260 );
+				filename.copyFrom( file.parent.filename, view.offset - position );
+				std::cout << "Name: " << file.parent.filename.toBasicString().c_str() << "\n";
+				
+				//TODO: offset, size, and metadata
+				//TODO: encrypt
+			}
+			return view.view.size();
 		}
 		uint64_t readHeaderFiles( OffsetView view ){
-			//TODO: read files
-			//TODO: encrypt
-			return 0;
+			auto position = header_header_size;
+			uint64_t written = 0;
+			for( auto& subfile : pp.subfiles() ){
+				auto new_position = position + header_file_size;
+				auto file_view = view.rightAt( position ).leftAt( new_position );
+				written += readHeaderFile( subfile, file_view, position );
+				position = new_position;
+			}
+			
+			return written;
 		}
 		
 		uint64_t readHeader( OffsetView view ){
 			view.debug( "header" );
-			auto magic_size = 8 + 4 + 1;
+			auto magic_size = header_header_size;
 			
 			return readHeaderHeader( view.leftAt( magic_size ) )
 			   +   readHeaderFiles( view.rightAt( magic_size ) )

@@ -37,6 +37,8 @@ class MergedPPFile : public AMergingObject{
 		void addPP( const std::vector<PPSubFile>& files );
 		uint64_t headerSize() const;
 		
+		const std::vector<PPSubFileReference> subfiles() const{ return files; }
+		
 		WStringView name() const override{ return makeView( filename ); }
 		bool isDir() const override{ return false; }
 		bool canWrite() const override{ return false; }
