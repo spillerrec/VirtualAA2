@@ -8,6 +8,8 @@
 #include <vector>
 
 class File;
+
+namespace PP{
 class HeaderDecrypter;
 
 struct SubFile{
@@ -22,9 +24,12 @@ struct SubFile{
 	Buffer getFile( File& file );
 };
 
+}
+
 class PPArchive{
 	public:
-		std::vector<SubFile> files;
+		static const uint8_t magic[];
+		std::vector<PP::SubFile> files;
 		
 	public:
 		PPArchive( File& file );

@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 set(SOURCES_DECODERS
 	decoders/PPArchive.cpp
+	decoders/PPCrypto.cpp
 	decoders/XXModel.cpp
 	)
 
