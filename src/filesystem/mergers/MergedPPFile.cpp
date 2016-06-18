@@ -3,6 +3,7 @@
 
 #include "MergedPPFile.hpp"
 #include "../../decoders/PPArchive.hpp"
+#include "../../decoders/PPCrypto.hpp"
 
 #include <iostream>
 
@@ -69,31 +70,36 @@ struct OffsetView{
 
 class UInt32View{
 	private:
-		Buffer data;
+		uint8_t data[4];
 	public:
-		UInt32View( uint32_t value ) : data( 4 ){
+		UInt32View( uint32_t value ) {
 			data[0] = (value >>  0) & 0xFF;
 			data[1] = (value >>  8) & 0xFF;
 			data[2] = (value >> 16) & 0xFF;
 			data[3] = (value >> 24) & 0xFF;
 		}
-		auto view() { return data.view(); }
+		ConstByteView view() { return { data, 4 }; }
 };
 
 class PPFileHandle : public FileHandle{
 	private:
-		const MergedPPFile& pp;
-		static const uint64_t header_header_size = { 8 + 4 + 1 };
+		static const uint64_t header_header_size = { 8 + 4 + 1 + 4 };
 		static const uint64_t header_file_size = { 260 + 4 + 4 + 20 }; //288
+		
+	private:
+		const MergedPPFile& pp;
+		PP::HeaderDecrypter header_encrypt;
 		
 		//TODO: assert in all of those, expected end is the same as bytes read?
 		uint64_t readHeaderHeader( OffsetView view ){
-			view.debug( "header-header" );
 			auto magic = view.leftAt( PPArchive::magic_length );
 			magic.copyFrom( ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
+			//TODO: Wrong if less than 8 bytes read
 			
 			auto rest = view.rightAt( PPArchive::magic_length ).leftAt( header_header_size );
 			//TODO: version 4, unknown 1
+			
+			//TODO: file count
 			
 			return magic.view.size() + rest.view.size();
 		}
@@ -111,16 +117,19 @@ class PPFileHandle : public FileHandle{
 				//Write header
 				writeFrom(   0, 260, file.parent.filename );
 				writeFrom( 260,   4, UInt32View(file.parent.file->filesize()).view() );
-				writeFrom( 264,   4, UInt32View(file.offset).view() );
+				writeFrom( 264,   4, UInt32View(file.offset                 ).view() );
 				writeFrom( 268,  20, file.parent.metadata );
 				
-				//TODO: encrypt
+				//encrypt
+				header_encrypt.setPosition( view.offset - header_header_size );
+				header_encrypt.decrypt( view.view );
 			}
 			return view.view.size();
 		}
 		uint64_t readHeaderFiles( OffsetView view ){
 			auto position = header_header_size;
 			uint64_t written = 0;
+			//TODO: Skip files known not to be in view
 			for( auto& subfile : pp.subfiles() ){
 				auto new_position = position + header_file_size;
 				auto file_view = view.rightAt( position ).leftAt( new_position );
@@ -132,23 +141,28 @@ class PPFileHandle : public FileHandle{
 		}
 		
 		uint64_t readHeader( OffsetView view ){
-			view.debug( "header" );
-			auto magic_size = header_header_size;
-			
-			return readHeaderHeader( view.leftAt( magic_size ) )
-			   +   readHeaderFiles( view.rightAt( magic_size ) )
+			return readHeaderHeader( view.leftAt( header_header_size ) )
+			   +   readHeaderFiles( view.rightAt( header_header_size ) )
 			   ;
 		}
 		
 		
-		uint64_t readFile( OffsetView view ){
-			//TODO:
-			return 0;
+		uint64_t readFile( const PPSubFileReference& file, OffsetView view ){
+			if( view.view.size() > 0 ){
+				//TODO:
+				//TODO: encrypt
+			}
+			return view.view.size();
 		}
 		
 		uint64_t readData( OffsetView view ){
-			//TODO:
-			return 0;
+			//TODO: more efficient
+			uint64_t written = 0;
+			for( auto& subfile : pp.subfiles() ){
+				auto file_view = view.rightAt( subfile.offset ).leftAt( subfile.offset + subfile.parent.file->filesize() );
+				written += readFile( subfile, file_view );
+			}
+			return written;
 		}
 		
 	public:
@@ -156,7 +170,6 @@ class PPFileHandle : public FileHandle{
 			:	pp( pp ) { }
 		
 		uint64_t read( ByteView to_read, uint64_t offset ) override{
-			std::cout << "read( " << to_read.size() << ", " << offset << " )\n";
 			OffsetView view( to_read, offset );
 			view.debug( "read" );
 			auto header_size = pp.headerSize();
