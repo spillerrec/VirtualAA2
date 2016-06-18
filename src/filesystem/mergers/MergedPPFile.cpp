@@ -67,6 +67,19 @@ struct OffsetView{
 	}
 };
 
+class UInt32View{
+	private:
+		Buffer data;
+	public:
+		UInt32View( uint32_t value ) : data( 4 ){
+			data[0] = (value >>  0) & 0xFF;
+			data[1] = (value >>  8) & 0xFF;
+			data[2] = (value >> 16) & 0xFF;
+			data[3] = (value >> 24) & 0xFF;
+		}
+		auto view() { return data.view(); }
+};
+
 class PPFileHandle : public FileHandle{
 	private:
 		const MergedPPFile& pp;
@@ -90,12 +103,17 @@ class PPFileHandle : public FileHandle{
 				for( auto& val : view.view )
 					val = 0;
 				
-				//Write filename
-				auto filename = view.leftAt( position+260 );
-				filename.copyFrom( file.parent.filename, view.offset - position );
-				std::cout << "Name: " << file.parent.filename.toBasicString().c_str() << "\n";
+				auto writeFrom = [&]( uint64_t left, uint64_t amount, auto from ){
+						auto to = view.rightAt( position+left ).leftAt( position+left+amount );
+						to.copyFrom( from, to.offset - (position+left) );
+					};
 				
-				//TODO: offset, size, and metadata
+				//Write header
+				writeFrom(   0, 260, file.parent.filename );
+				writeFrom( 260,   4, UInt32View(file.parent.file->filesize()).view() );
+				writeFrom( 264,   4, UInt32View(file.offset).view() );
+				writeFrom( 268,  20, file.parent.metadata );
+				
 				//TODO: encrypt
 			}
 			return view.view.size();
