@@ -63,7 +63,7 @@ struct OffsetView{
 	}
 	
 	OffsetView debug( const char* name ) const{
-		std::cout << name << ", offset: " << offset << " with size: " << view.size() << "\n";
+	//	std::cout << name << ", offset: " << offset << " with size: " << view.size() << "\n";
 		return *this;
 	}
 };
@@ -149,10 +149,25 @@ class PPFileHandle : public FileHandle{
 		
 		uint64_t readFile( const PPSubFileReference& file, OffsetView view ){
 			if( view.view.size() > 0 ){
-				//TODO:
-				//TODO: encrypt
+				//TODO: do not reopen each time?
+				auto handle = file.parent.file->openRead();
+				if( handle ){
+					//Read contents
+					auto offset = view.offset - file.offset;
+					auto read = handle->read( view.view, offset );
+					
+					//encrypt
+					PP::FileDecrypter encrypter;
+					encrypter.setPosition( offset );
+					encrypter.decrypt( view.view );
+					
+					return read;
+				}
+				else
+					std::cout << "Failed to open handle\n";
 			}
-			return view.view.size();
+			
+			return 0;
 		}
 		
 		uint64_t readData( OffsetView view ){
