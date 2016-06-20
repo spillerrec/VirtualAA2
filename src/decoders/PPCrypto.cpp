@@ -16,7 +16,8 @@ const uint8_t FileDecrypter::mask[] = {
 };
 
 void HeaderDecrypter::setPosition( uint32_t position ){
-	//TODO:
+	if( index != position )
+		throw std::runtime_error( "HeaderDecrypter::setPosition does not yet support random seeking" ); //TODO:
 }
 
 void HeaderDecrypter::decrypt( ByteView buffer ){

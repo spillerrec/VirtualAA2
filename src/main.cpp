@@ -24,14 +24,14 @@ static int copy_file( const wchar_t* data_dir_path, const wchar_t* filepath, con
 	
 	File out( to, L"wb" );
 	
-	const auto buffer_size = 256;
+	const auto buffer_size = 256*4;
 	Buffer read_buffer( buffer_size );
 	
 	uint64_t bytes_read = 0;
 	uint64_t offset = 0;
 	std::cout << "Starting to read\n";
 	while( (bytes_read = handle->read( read_buffer.view(), offset )) > 0 ){
-		std::cout << "read: " << bytes_read << std::endl;
+	//	std::cout << "read: " << bytes_read << std::endl;
 		out.write( read_buffer.view().left( bytes_read ) );
 		offset += bytes_read;
 	}

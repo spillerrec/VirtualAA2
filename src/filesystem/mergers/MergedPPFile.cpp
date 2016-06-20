@@ -62,6 +62,22 @@ struct OffsetView{
 				view[i] = data[i+offset];
 	}
 	
+	template<typename T>
+	auto copyInto( uint64_t position, uint64_t from, ArrayView<T> data ){
+		auto to = rightAt( position+from ).leftAt( position+from+data.size() );
+		to.copyFrom( data, to.offset - (position+from) );
+		return to;
+	}
+	
+	template<typename T, typename Decrypter>
+	void copyIntoEncrypt( uint64_t position, uint64_t from, ArrayView<T> data, Decrypter d ){
+		auto to = copyInto( position, from, data );
+		if( to.view.size() > 0 ){
+			d.setPosition( to.offset - (position+from) );
+			d.decrypt( to.view );
+		}
+	}
+	
 	OffsetView debug( const char* name ) const{
 	//	std::cout << name << ", offset: " << offset << " with size: " << view.size() << "\n";
 		return *this;
@@ -92,16 +108,15 @@ class PPFileHandle : public FileHandle{
 		
 		//TODO: assert in all of those, expected end is the same as bytes read?
 		uint64_t readHeaderHeader( OffsetView view ){
-			auto magic = view.leftAt( PPArchive::magic_length );
-			magic.copyFrom( ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
-			//TODO: Wrong if less than 8 bytes read
+			view.copyInto( 0, 0, ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
 			
-			auto rest = view.rightAt( PPArchive::magic_length ).leftAt( header_header_size );
-			//TODO: version 4, unknown 1
+			//TODO: version 4
+			view.copyIntoEncrypt( PPArchive::magic_length, 0, UInt32View( 42 ).view(), PP::HeaderDecrypter() ); //TODO:
+			//TODO: unknown1 1
+			//File count
+			view.copyIntoEncrypt( PPArchive::magic_length, 5, UInt32View( pp.subfiles().size() ).view(), PP::HeaderDecrypter() );
 			
-			//TODO: file count
-			
-			return magic.view.size() + rest.view.size();
+			return view.leftAt( header_header_size ).view.size();
 		}
 		uint64_t readHeaderFile( const PPSubFileReference& file, OffsetView view, uint64_t position ){
 			if( view.view.size() > 0 ){
@@ -109,16 +124,11 @@ class PPFileHandle : public FileHandle{
 				for( auto& val : view.view )
 					val = 0;
 				
-				auto writeFrom = [&]( uint64_t left, uint64_t amount, auto from ){
-						auto to = view.rightAt( position+left ).leftAt( position+left+amount );
-						to.copyFrom( from, to.offset - (position+left) );
-					};
-				
 				//Write header
-				writeFrom(   0, 260, file.parent.filename );
-				writeFrom( 260,   4, UInt32View(file.parent.file->filesize()).view() );
-				writeFrom( 264,   4, UInt32View(file.offset                 ).view() );
-				writeFrom( 268,  20, file.parent.metadata );
+				view.copyInto( position,   0, file.parent.filename );
+				view.copyInto( position, 260, UInt32View(file.parent.file->filesize()).view() );
+				view.copyInto( position, 264, UInt32View(file.offset                 ).view() );
+				view.copyInto( position, 268, file.parent.metadata );
 				
 				//encrypt
 				header_encrypt.setPosition( view.offset - header_header_size );
