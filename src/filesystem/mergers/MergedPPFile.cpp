@@ -111,8 +111,9 @@ class PPFileHandle : public FileHandle{
 			view.copyInto( 0, 0, ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
 			
 			//TODO: version 4
-			view.copyIntoEncrypt( PPArchive::magic_length, 0, UInt32View( 42 ).view(), PP::HeaderDecrypter() ); //TODO:
+			view.copyIntoEncrypt( PPArchive::magic_length, 0, UInt32View( 109 ).view(), PP::HeaderDecrypter() ); //TODO:
 			//TODO: unknown1 1
+			view.copyInto( PPArchive::magic_length, 4, UInt32View( 0x35 ).view() ); //TODO:
 			//File count
 			view.copyIntoEncrypt( PPArchive::magic_length, 5, UInt32View( pp.subfiles().size() ).view(), PP::HeaderDecrypter() );
 			

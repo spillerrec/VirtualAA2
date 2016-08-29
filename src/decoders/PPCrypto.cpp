@@ -16,8 +16,21 @@ const uint8_t FileDecrypter::mask[] = {
 };
 
 void HeaderDecrypter::setPosition( uint32_t position ){
-	if( index != position )
-		throw std::runtime_error( "HeaderDecrypter::setPosition does not yet support random seeking" ); //TODO:
+	if( index != position ){
+		//Reset mask
+		*this = HeaderDecrypter();
+		
+		//Skip to current iteration
+		auto offset_count = position / 8;
+		for( unsigned i=0; i<8; i++ )
+			mask[i] += offset_count * offset[i];
+		
+		//Add offset to the one already passed
+		for( unsigned i=0; i < (position % 8); i++ )
+			mask[i] += offset[i];
+		
+		index = position;
+	}
 }
 
 void HeaderDecrypter::decrypt( ByteView buffer ){
