@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
 
-# C++14
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-
 # Turn on warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
@@ -42,5 +39,13 @@ set(SOURCES_USER_FILESYSTEM filesystem-win.cpp)
 ADD_DEFINITIONS(-DUNICODE)
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode" )
 
-add_executable(VirtualAA2 ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} main.cpp)
-target_link_libraries(VirtualAA2 -ldokan1)
+add_library(VirtualAA2Core ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_FILESYSTEM} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} )
+
+add_executable(VirtualAA2 main.cpp)
+target_link_libraries(VirtualAA2 VirtualAA2Core -ldokan1)
+
+# Enable C++14 features
+set_property(TARGET VirtualAA2     PROPERTY CXX_STANDARD 14)
+set_property(TARGET VirtualAA2Core PROPERTY CXX_STANDARD 14)
+set_property(TARGET VirtualAA2     PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET VirtualAA2Core PROPERTY CXX_STANDARD_REQUIRED ON)
