@@ -21,20 +21,31 @@ std::unique_ptr<AMergingObject> PassthroughFile::createMerger() const
 class PassthroughFileHandle : public FileHandle{
 	private:
 		File file;
-		//TODO: Try to optimize away the seeks?
+		uint64_t current_offset{ 0 };
+		
+		void seekTo( uint64_t new_offset ){
+			if( current_offset != new_offset ){
+				file.seek( new_offset, 0 );
+				current_offset = new_offset;
+			}
+		}
+		uint64_t seekChanged( uint64_t moved ){
+			current_offset += moved;
+			return moved;
+		}
 		
 	public:
 		PassthroughFileHandle( const std::wstring& path, const wchar_t* mode )
 			:	file( path.c_str(), mode ) { }
 		
 		uint64_t read( ByteView to_read, uint64_t offset ) override{
-			file.seek( offset, 0 );
-			return file.read( to_read );
+			seekTo( offset );
+			return seekChanged( file.read( to_read ) );
 		}
 
 		uint64_t write( ConstByteView to_write, uint64_t offset ) override{
 			file.seek( offset, 0 );
-			return file.write( to_write );
+			return seekChanged( file.write( to_write ) );
 		}
 };
 

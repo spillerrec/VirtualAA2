@@ -4,6 +4,7 @@
 #include "MergedPPFile.hpp"
 #include "../../decoders/PPArchive.hpp"
 #include "../../decoders/PPCrypto.hpp"
+#include "../../utils/debug.hpp"
 
 #include <iostream>
 
@@ -106,6 +107,23 @@ class PPFileHandle : public FileHandle{
 		const MergedPPFile& pp;
 		PP::HeaderDecrypter header_encrypt;
 		
+		class CachedHandle{
+			private:
+				FileObject* file_object{ nullptr };
+				std::unique_ptr<FileHandle> handle;
+				
+			public:
+				void clear(){ *this = {}; }
+				FileHandle& open( FileObject& file ){
+					if( file_object != &file ){
+						file_object = &file;
+						handle = file.openRead();
+					}
+					always( (bool)handle, "Could not open file" );
+					return *handle;
+				}
+		} open_handle;
+		
 		//TODO: assert in all of those, expected end is the same as bytes read?
 		uint64_t readHeaderHeader( OffsetView view ){
 			view.copyInto( 0, 0, ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
@@ -160,22 +178,19 @@ class PPFileHandle : public FileHandle{
 		
 		uint64_t readFile( const PPSubFileReference& file, OffsetView view ){
 			if( view.view.size() > 0 ){
-				//TODO: do not reopen each time?
-				auto handle = file.parent.file->openRead();
-				if( handle ){
-					//Read contents
-					auto offset = view.offset - file.offset;
-					auto read = handle->read( view.view, offset );
-					
-					//encrypt
-					PP::FileDecrypter encrypter;
-					encrypter.setPosition( offset );
-					encrypter.decrypt( view.view );
-					
-					return read;
-				}
-				else
-					std::cout << "Failed to open handle\n";
+				always( (bool)file.parent.file, "PPSubFile did not have a file" );
+				auto& handle = open_handle.open( *file.parent.file );
+				
+				//Read contents
+				auto offset = view.offset - file.offset;
+				auto read = handle.read( view.view, offset );
+				
+				//encrypt
+				PP::FileDecrypter encrypter;
+				encrypter.setPosition( offset );
+				encrypter.decrypt( view.view );
+				
+				return read;
 			}
 			
 			return 0;
