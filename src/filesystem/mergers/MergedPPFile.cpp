@@ -6,6 +6,7 @@
 #include "../../decoders/PPCrypto.hpp"
 #include "../../utils/debug.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 uint64_t MergedPPFile::headerSize() const{
@@ -24,6 +25,8 @@ void MergedPPFile::addPP( const std::vector<PPSubFile>& subfiles ){
 		file.offset = offset;
 		offset += file.filesize();
 	}
+	
+	std::sort( files.begin(), files.end() );
 }
 
 uint64_t MergedPPFile::filesize() const{
@@ -34,6 +37,20 @@ uint64_t MergedPPFile::filesize() const{
 		);
 	
 	return headerSize() + data_size;
+}
+
+MergedPPFile::FileIterator MergedPPFile::firstSubFile( uint64_t offset ) const{
+	//The first file were the last byte of it is smaller than offset
+	auto comp = []( const PPSubFileReference& file, uint64_t offset )
+		{ return file.offset + file.filesize() < offset; };
+	return std::lower_bound( files.begin(), files.end(), offset, comp );
+}
+
+MergedPPFile::FileIterator MergedPPFile::lastSubFile( uint64_t offset ) const{
+	//The last file were the first byte of it is smaller than offset
+	auto comp = []( uint64_t offset, const PPSubFileReference& file )
+		{ return offset < file.offset; };
+	return std::upper_bound( files.begin(), files.end(), offset, comp );
 }
 
 struct OffsetView{
@@ -144,10 +161,10 @@ class PPFileHandle : public FileHandle{
 					val = 0;
 				
 				//Write header
-				view.copyInto( position,   0, file.parent.filename );
-				view.copyInto( position, 260, UInt32View(file.parent.file->filesize()).view() );
+				view.copyInto( position,   0, file.parent->filename );
+				view.copyInto( position, 260, UInt32View(file.parent->file->filesize()).view() );
 				view.copyInto( position, 264, UInt32View(file.offset                 ).view() );
-				view.copyInto( position, 268, file.parent.metadata );
+				view.copyInto( position, 268, file.parent->metadata );
 				
 				//encrypt
 				header_encrypt.setPosition( view.offset - header_header_size );
@@ -170,6 +187,9 @@ class PPFileHandle : public FileHandle{
 		}
 		
 		uint64_t readHeader( OffsetView view ){
+			if( view.view.size() == 0 )
+				return 0;
+			
 			return readHeaderHeader( view.leftAt( header_header_size ) )
 			   +   readHeaderFiles( view.rightAt( header_header_size ) )
 			   ;
@@ -178,8 +198,8 @@ class PPFileHandle : public FileHandle{
 		
 		uint64_t readFile( const PPSubFileReference& file, OffsetView view ){
 			if( view.view.size() > 0 ){
-				always( (bool)file.parent.file, "PPSubFile did not have a file" );
-				auto& handle = open_handle.open( *file.parent.file );
+				always( (bool)file.parent->file, "PPSubFile did not have a file" );
+				auto& handle = open_handle.open( *file.parent->file );
 				
 				//Read contents
 				auto offset = view.offset - file.offset;
@@ -197,11 +217,16 @@ class PPFileHandle : public FileHandle{
 		}
 		
 		uint64_t readData( OffsetView view ){
+			if( view.view.size() == 0 )
+				return 0;
+			
 			//TODO: more efficient
 			uint64_t written = 0;
-			for( auto& subfile : pp.subfiles() ){
-				auto file_view = view.rightAt( subfile.offset ).leftAt( subfile.offset + subfile.parent.file->filesize() );
-				written += readFile( subfile, file_view );
+			auto subfile = pp.firstSubFile( view.offset                    );
+			auto last    = pp. lastSubFile( view.offset + view.view.size() );
+			for( ; subfile!=last; subfile++ ){
+				auto file_view = view.rightAt( subfile->offset ).leftAt( subfile->offset + subfile->parent->file->filesize() );
+				written += readFile( *subfile, file_view );
 			}
 			return written;
 		}

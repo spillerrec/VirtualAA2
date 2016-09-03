@@ -10,24 +10,19 @@
 #include <vector>
 
 struct PPSubFileReference{
-	const PPSubFile& parent;
+	const PPSubFile* parent;
 	uint64_t offset{ 0u };
 	
-	PPSubFileReference( const PPSubFile& parent ) : parent(parent) { }
+	PPSubFileReference( const PPSubFile& parent ) : parent(&parent) { }
 	
-	auto filesize() const{ return parent.file->filesize(); }
-	
-	bool operator<( uint64_t offset ) const{ return filesize() < offset; }
+	auto filesize() const{ return parent->file->filesize(); }
+	bool operator<( const PPSubFileReference& other ) const{ return this->offset < other.offset; }
 };
 
 class MergedPPFile : public AMergingObject{
 	private:
 		std::wstring filename;
-		
 		std::vector<PPSubFileReference> files;
-		
-		PPSubFileReference fileFromOffset( uint64_t offset ) const
-			{ return *std::lower_bound( files.begin(), files.end(), offset ); }
 		
 	public:
 		MergedPPFile( std::wstring filename ) : filename(filename) { }
@@ -37,7 +32,11 @@ class MergedPPFile : public AMergingObject{
 		void addPP( const std::vector<PPSubFile>& files );
 		uint64_t headerSize() const;
 		
-		const std::vector<PPSubFileReference> subfiles() const{ return files; }
+		const std::vector<PPSubFileReference>& subfiles() const{ return files; }
+		
+		using FileIterator = std::vector<PPSubFileReference>::const_iterator;
+		FileIterator firstSubFile( uint64_t offset ) const;
+		FileIterator  lastSubFile( uint64_t offset ) const;
 		
 		WStringView name() const override{ return makeView( filename ); }
 		bool isDir() const override{ return false; }
