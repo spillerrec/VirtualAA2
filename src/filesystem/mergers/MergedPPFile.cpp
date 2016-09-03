@@ -59,6 +59,9 @@ struct OffsetView{
 	
 	OffsetView( ByteView view, uint64_t offset ) : view(view), offset(offset) { }
 	
+	uint64_t left()  const{ return offset; }
+	uint64_t right() const{ return offset + view.size(); }
+	
 	uint64_t splitPos( uint64_t position ) const{
 		auto relative = int64_t(position) - int64_t(offset);
 		//Truncate to be within range of view
@@ -174,13 +177,15 @@ class PPFileHandle : public FileHandle{
 		}
 		uint64_t readHeaderFiles( OffsetView view ){
 			auto position = header_header_size;
+			auto first_index = (view.left()  - header_header_size) / header_file_size;
+			auto  last_index = (view.right() - header_header_size) / header_file_size;
+			last_index = std::min( last_index, pp.subfiles().size()-1 ); //TODO: size == 0
+			
 			uint64_t written = 0;
-			//TODO: Skip files known not to be in view
-			for( auto& subfile : pp.subfiles() ){
-				auto new_position = position + header_file_size;
-				auto file_view = view.rightAt( position ).leftAt( new_position );
-				written += readHeaderFile( subfile, file_view, position );
-				position = new_position;
+			for( auto i=first_index; i<=last_index; i++ ){
+				auto position = header_header_size + i*header_file_size;
+				auto file_view = view.rightAt( position ).leftAt( position + header_file_size );
+				written += readHeaderFile( pp.subfiles()[i], file_view, position );
 			}
 			
 			return written;
@@ -220,10 +225,9 @@ class PPFileHandle : public FileHandle{
 			if( view.view.size() == 0 )
 				return 0;
 			
-			//TODO: more efficient
 			uint64_t written = 0;
-			auto subfile = pp.firstSubFile( view.offset                    );
-			auto last    = pp. lastSubFile( view.offset + view.view.size() );
+			auto subfile = pp.firstSubFile( view.left()  );
+			auto last    = pp. lastSubFile( view.right() );
 			for( ; subfile!=last; subfile++ ){
 				auto file_view = view.rightAt( subfile->offset ).leftAt( subfile->offset + subfile->parent->file->filesize() );
 				written += readFile( *subfile, file_view );
