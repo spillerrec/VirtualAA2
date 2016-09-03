@@ -56,11 +56,15 @@ PPArchive::PPArchive( File& file ){
 	for( unsigned i=0; i<file_amount; i++ )
 		files.emplace_back( file, decrypter );
 	
+	temp = HeaderDecrypter();
+	auto data_offset = read32u( file, temp );
+	//Should be equal to the size of the header
+	
 	/*
 	for( auto& file : files ){	
 		printf( "%s\n", file.filename.data() );
 		printf( "data: %d - %d\n", file.size, file.offset );
-	}*/
+	}//*/
 }
 
 

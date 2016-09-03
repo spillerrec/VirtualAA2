@@ -10,8 +10,8 @@
 #include <iostream>
 
 uint64_t MergedPPFile::headerSize() const{
-	auto magic_size = 8 + 4 + 1; //magic, version, unknown1
-	return magic_size + ( 260 + 4 + 4 + 20 ) * files.size(); // ( name, offset, size, meta )
+	auto magic_size = 8 + 4 + 1+ + 4; //magic, version, unknown1, file count
+	return magic_size + ( 260 + 4 + 4 + 20 ) * files.size() + 4; // ( name, offset, size, meta ) + data offset
 }
 
 void MergedPPFile::addPP( const std::vector<PPSubFile>& subfiles ){
@@ -176,7 +176,6 @@ class PPFileHandle : public FileHandle{
 			return view.view.size();
 		}
 		uint64_t readHeaderFiles( OffsetView view ){
-			auto position = header_header_size;
 			auto first_index = (view.left()  - header_header_size) / header_file_size;
 			auto  last_index = (view.right() - header_header_size) / header_file_size;
 			last_index = std::min( last_index, pp.subfiles().size()-1 ); //TODO: size == 0
@@ -187,6 +186,9 @@ class PPFileHandle : public FileHandle{
 				auto file_view = view.rightAt( position ).leftAt( position + header_file_size );
 				written += readHeaderFile( pp.subfiles()[i], file_view, position );
 			}
+			
+			auto data_offset = pp.headerSize();
+			view.rightAt( data_offset-4 ).copyIntoEncrypt( data_offset-4, 0, UInt32View( data_offset ).view(), PP::HeaderDecrypter() );
 			
 			return written;
 		}
