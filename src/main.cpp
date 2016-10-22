@@ -2,8 +2,10 @@
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
 #include "encoders/PPCompactor.hpp"
+#include "decoders/XXModel.hpp"
 #include "filesystem-win.hpp"
 #include "filesystem/FilePath.hpp"
+#include "filesystem/FileSystem.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 #include "filesystem/PPFile.hpp"
 #include "utils/File.hpp"
@@ -60,6 +62,34 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 	return 0;
 }
 
+static int split_xx( const wchar_t* xx_dir ){
+	auto base_folder = std::wstring( xx_dir );
+	for( auto file : getFolderContents( base_folder ) ){
+		auto xx_path = file.path( base_folder );
+		auto filepath = FilePath( makeView( xx_path ) );
+		auto filename = filepath.filename().left( filepath.filename().size()-2 ).toBasicString();
+		auto folder = filepath.folderPath();
+		makeFolder( folder, filename );
+		auto out_folder = folder + L"\\" + filename;
+		
+		XXModel xx( File( xx_path.c_str(), L"rb" ).readAll() );
+		
+		for( auto& texture : xx.textures ){
+			File out( (out_folder + L"\\" + fromJapPath(texture.name.toString())).c_str(), L"wb" );
+			
+			auto name = texture.name.toString();
+			if( name.substr( name.size()-4 ) == std::string("bmp\0", 4) ){
+				//TODO: fix \0 in texture name
+				texture.data[0] = 0x42;
+				texture.data[1] = 0x4D;
+			}
+			out.write( texture.data );
+		}
+	}
+	
+	return 0;
+}
+
 int wmain( int argc, wchar_t* argv[] ){
 	if( argc < 2 )
 		return error( "VirtualAA2 <path-to-aa2-data-dir> [mount-point]\n" );
@@ -77,6 +107,12 @@ int wmain( int argc, wchar_t* argv[] ){
 				return compact_pp_test( argv[2], argv[3], argv[4], argv[5] );
 			else
 				return error( "VirtualAA2 --compact-pp-test <path-to-aa2-data-dir> <file-to-copy> <output-directory> <output-name>" );
+		}
+		else if( param1 == makeView( L"--split-xx" ) ){
+			if( argc == 3 )
+				return split_xx( argv[2] );
+			else
+				return error( "VirtualAA2 --split-xx <path-to-xx-file>" );
 		}
 		else
 			return error( "Unknown parameter" );
