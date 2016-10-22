@@ -34,6 +34,8 @@ class Deduper{
 		
 		unsigned total_size() const;
 		unsigned savings() const;
+		unsigned addedCount() const;
+		unsigned savedCount() const;
 };
 
 #endif

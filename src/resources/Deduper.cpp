@@ -55,3 +55,11 @@ unsigned Deduper::savings() const{
 		,	[]( unsigned acc, auto& item ){ return acc + item.data.size(); }
 		);
 }
+
+unsigned Deduper::addedCount() const{
+	return std::accumulate( items.begin(), items.end(), 0u
+		,	[]( unsigned acc, auto& item ){ return acc + item.sources.size(); }
+		);
+}
+
+unsigned Deduper::savedCount() const{ return items.size(); }

@@ -120,6 +120,8 @@ static int split_xx( const wchar_t* xx_dir ){
 	
 	std::cout << "Total mesh size: " << dedupe_meshes.total_size() << "\n";
 	std::cout << "Savings: " << dedupe_meshes.savings() << "\n";
+	std::cout << "Meshes: " << dedupe_meshes.addedCount() << "\n";
+	std::cout << "Unique: " << dedupe_meshes.savedCount() << "\n";
 	
 	makeFolder( base_folder, L"\\meshes" );
 	int i=0;
