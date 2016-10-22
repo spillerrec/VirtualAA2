@@ -22,12 +22,15 @@ auto sumXXSize( const std::vector<T>& arr ){
 }
 
 class Mesh{
-	private:
+	public:
 		ByteView unknown1;
 		int index; //Material index
+		uint32_t faces_count;
 		ByteView faces;
+		uint32_t vertex_count;
 		ByteView vertexes;
-		ByteView unknown2; //Use name at end?
+		ByteView unknown2;
+		//TODO: additional name at end. Combine into unknown2?
 		
 	public:
 		Mesh( ByteViewReader& reader, int format, int vector2count );
@@ -44,20 +47,16 @@ class Bone{
 };
 
 class Frame{
-	private:
+	public:
 		//Name length
 		NotByteView name;
-		//Frames/children count
+		//Frames/children count, use children.size()
 		ByteView header1;
-		//Submeshes count
+		//Submeshes count, use meshes.size()
 		ByteView header2;
-		//[Submeshes]...
+		std::vector<Mesh> meshes;
 		ByteView vertice_dupes; //Donno
 		std::vector<Bone> bones;
-		//[Frame]...
-	
-	public:
-		std::vector<Mesh> meshes;
 		std::vector<Frame> children;
 		
 	public:
