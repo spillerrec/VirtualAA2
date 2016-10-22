@@ -8,6 +8,7 @@
 #include "filesystem/FileSystem.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 #include "filesystem/PPFile.hpp"
+#include "resources/Deduper.hpp"
 #include "utils/File.hpp"
 #include "utils/StringView.hpp"
 
@@ -62,7 +63,7 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 	return 0;
 }
 
-static void write_frame_data( const std::wstring& folder, const XX::Frame& frame, int& frame_count ){
+static void write_frame_data( const std::wstring& folder, const XX::Frame& frame, int& frame_count, Deduper& dedupe_meshes ){
 	auto base_name = folder + L"frame_" + std::to_wstring( frame_count ) + L"_";
 	
 	//Output mesh vertices
@@ -71,6 +72,7 @@ static void write_frame_data( const std::wstring& folder, const XX::Frame& frame
 		if( mesh.vertexes.size() > 0 ){
 			File out( (base_name + L"mesh_" + std::to_wstring( mesh_id++ ) ).c_str(), L"wb" );
 			out.write( mesh.vertexes );
+			dedupe_meshes.add( mesh.vertexes );
 		}
 	}
 	
@@ -81,11 +83,14 @@ static void write_frame_data( const std::wstring& folder, const XX::Frame& frame
 	//Recurse into children
 	for( auto& child : frame.children ){
 		frame_count++;
-		write_frame_data( folder, child, frame_count );
+		write_frame_data( folder, child, frame_count, dedupe_meshes );
 	}
 }
 
 static int split_xx( const wchar_t* xx_dir ){
+	Deduper dedupe_meshes;
+	Deduper dedupe_textures;
+	
 	auto base_folder = std::wstring( xx_dir );
 	for( auto file : getFolderContents( base_folder ) ){
 		auto xx_path = file.path( base_folder );
@@ -110,7 +115,17 @@ static int split_xx( const wchar_t* xx_dir ){
 		}
 		
 		int frame_count = 1;
-		write_frame_data( out_folder, xx.frame, frame_count );
+		write_frame_data( out_folder, xx.frame, frame_count, dedupe_meshes );
+	}
+	
+	std::cout << "Total mesh size: " << dedupe_meshes.total_size() << "\n";
+	std::cout << "Savings: " << dedupe_meshes.savings() << "\n";
+	
+	makeFolder( base_folder, L"\\meshes" );
+	int i=0;
+	for( auto& resource : dedupe_meshes.resources() ){
+		auto name = base_folder + L"\\meshes\\mesh_" + std::to_wstring( i++ ) + L" - files " + std::to_wstring( resource.sources.size() );
+		File( name.c_str(), L"wb" ).write( resource.data );
 	}
 	
 	return 0;

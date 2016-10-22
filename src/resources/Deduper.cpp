@@ -4,6 +4,7 @@
 #include "Deduper.hpp"
 
 #include <boost/crc.hpp>
+#include <numeric>
 
 Deduper::Hash Deduper::calculateHash( ByteView data ){
 	boost::crc_32_type crc;
@@ -40,4 +41,17 @@ unsigned Deduper::duplicated( ByteView view ) const{
 	//TODO: look after view without accessing data?
 	auto resource = findExisting( calculateHash( view ) );
 	return resource ? resource->sources.size() : 0;
+}
+
+unsigned Deduper::total_size() const{
+	return std::accumulate( items.begin(), items.end(), 0u
+		,	[]( unsigned acc, auto& item )
+			{ return acc + item.data.size() * item.sources.size(); }
+		);
+}
+
+unsigned Deduper::savings() const{
+	return total_size() - std::accumulate( items.begin(), items.end(), 0u
+		,	[]( unsigned acc, auto& item ){ return acc + item.data.size(); }
+		);
 }

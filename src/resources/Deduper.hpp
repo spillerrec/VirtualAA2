@@ -31,6 +31,9 @@ class Deduper{
 		
 		unsigned duplicated( ByteView view ) const;
 		const auto& resources() const{ return items; }
+		
+		unsigned total_size() const;
+		unsigned savings() const;
 };
 
 #endif
