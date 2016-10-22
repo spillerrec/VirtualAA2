@@ -33,6 +33,16 @@ class Mesh{
 		Mesh( ByteViewReader& reader, int format, int vector2count );
 };
 
+class Bone{
+	public:
+		ByteView name;
+		uint32_t index;
+		ByteView matrix;
+		
+	public:
+		Bone( ByteViewReader& reader );
+};
+
 class Frame{
 	private:
 		//Name length
@@ -43,7 +53,7 @@ class Frame{
 		ByteView header2;
 		//[Submeshes]...
 		ByteView vertice_dupes; //Donno
-		ByteView bones;
+		std::vector<Bone> bones;
 		//[Frame]...
 	
 	public:

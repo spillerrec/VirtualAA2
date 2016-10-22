@@ -68,6 +68,12 @@ static void coutName( const char* prefix, NotByteView view ){
 	std::cout << std::endl;*/
 }
 
+Bone::Bone( ByteViewReader& reader ){
+	name = reader.readName();
+	index = reader.read32u();
+	matrix = reader.read( 4*4*4 );
+}
+
 Frame::Frame( ByteViewReader& reader, int format ){
 	name = reader.readName();
 	coutName( "Frame name: ", name );
@@ -97,16 +103,11 @@ Frame::Frame( ByteViewReader& reader, int format ){
 		reader.read( dupe_amount * vertex_size );
 		dupe_size += reader.tell() - dupe_start;
 		
-		//TODO: bone list
-		auto bone_start = reader.tell();
+		//bone list
 		auto bone_count = reader.read32u();
-		for( int i=0; i<bone_count; i++ ){
-			auto bone_name = reader.readName();
-		//	coutName( "Bone: ", bone_name );
-			reader.read32u(); //Index
-			reader.read( 4*4*4 ); //Matrix
-		}
-		bone_size += reader.tell() - bone_start;
+		bones.reserve( bone_count );
+		for( int i=0; i<bone_count; i++ )
+			bones.emplace_back( reader );
 	}
 	
 	children.reserve( children_count );
