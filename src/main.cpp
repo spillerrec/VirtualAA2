@@ -62,6 +62,29 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 	return 0;
 }
 
+static void write_frame_data( const std::wstring& folder, const XX::Frame& frame, int& frame_count ){
+	auto base_name = folder + L"frame_" + std::to_wstring( frame_count ) + L"_";
+	
+	//Output mesh vertices
+	int mesh_id = 0;
+	for( auto& mesh : frame.meshes ){
+		if( mesh.vertexes.size() > 0 ){
+			File out( (base_name + L"mesh_" + std::to_wstring( mesh_id++ ) ).c_str(), L"wb" );
+			out.write( mesh.vertexes );
+		}
+	}
+	
+	//Output dupes
+	if( frame.vertice_dupes.size() > 0 )
+		File( (base_name + L"dupes").c_str(), L"wb" ).write( frame.vertice_dupes );
+	
+	//Recurse into children
+	for( auto& child : frame.children ){
+		frame_count++;
+		write_frame_data( folder, child, frame_count );
+	}
+}
+
 static int split_xx( const wchar_t* xx_dir ){
 	auto base_folder = std::wstring( xx_dir );
 	for( auto file : getFolderContents( base_folder ) ){
@@ -70,12 +93,12 @@ static int split_xx( const wchar_t* xx_dir ){
 		auto filename = filepath.filename().left( filepath.filename().size()-2 ).toBasicString();
 		auto folder = filepath.folderPath();
 		makeFolder( folder, filename );
-		auto out_folder = folder + L"\\" + filename;
+		auto out_folder = folder + L"\\" + filename + L"\\";
 		
 		XX::Model xx( File( xx_path.c_str(), L"rb" ).readAll() );
 		
 		for( auto& texture : xx.textures ){
-			File out( (out_folder + L"\\" + fromJapPath(texture.name.toString())).c_str(), L"wb" );
+			File out( (out_folder + fromJapPath(texture.name.toString())).c_str(), L"wb" );
 			
 			auto name = texture.name.toString();
 			if( name.substr( name.size()-4 ) == std::string("bmp\0", 4) ){
@@ -85,6 +108,9 @@ static int split_xx( const wchar_t* xx_dir ){
 			}
 			out.write( texture.data );
 		}
+		
+		int frame_count = 1;
+		write_frame_data( out_folder, xx.frame, frame_count );
 	}
 	
 	return 0;
