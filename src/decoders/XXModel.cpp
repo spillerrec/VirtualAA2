@@ -8,11 +8,13 @@
 
 #include <iostream>
 
+using namespace XX;
+
 unsigned mesh_size = 0;
 unsigned bone_size = 0;
 unsigned dupe_size = 0;
 
-XXModel::XXModel( Buffer file ) : data(std::move(file)) {
+Model::Model( Buffer file ) : data(std::move(file)) {
 	ByteViewReader reader( data );
 	
 //Read header
@@ -27,7 +29,7 @@ XXModel::XXModel( Buffer file ) : data(std::move(file)) {
 	data_header = reader.makeView( 0, header_end );
 	
 //Read frames
-	frame = XXFrame( reader, format );
+	frame = Frame( reader, format );
 	
 //Read unknown
 	unknown3 = reader.read( 4 );
@@ -66,7 +68,7 @@ static void coutName( const char* prefix, NotByteView view ){
 	std::cout << std::endl;*/
 }
 
-XXFrame::XXFrame( ByteViewReader& reader, int format ){
+Frame::Frame( ByteViewReader& reader, int format ){
 	name = reader.readName();
 	coutName( "Frame name: ", name );
 	
@@ -110,10 +112,10 @@ XXFrame::XXFrame( ByteViewReader& reader, int format ){
 	children.reserve( children_count );
 	for( unsigned i=0; i<children_count; i++ )
 		children.emplace_back( reader, format );
-//	XXFrame( reader, format );
+//	Frame( reader, format );
 }
 
-XXMesh::XXMesh( ByteViewReader& reader, int format, int vector2count ){
+Mesh::Mesh( ByteViewReader& reader, int format, int vector2count ){
 	auto start = reader.tell();
 	unknown1 = reader.read( format >= 7 ? 64 : 16 );
 	index = reader.read32u();
@@ -148,7 +150,7 @@ XXMesh::XXMesh( ByteViewReader& reader, int format, int vector2count ){
 	mesh_size += end-start;
 }
 
-XXMaterial::XXMaterial( ByteViewReader& reader ){
+Material::Material( ByteViewReader& reader ){
 	name = reader.readName();
 	coutName( "Material: ", name );
 	colors = reader.read( 4*4 * 4 + 4 );
@@ -162,7 +164,7 @@ XXMaterial::XXMaterial( ByteViewReader& reader ){
 	unknown = reader.read( 88 ); //TODO: format < 0 ?
 }
 
-XXTexture::XXTexture( ByteViewReader& reader ){
+Texture::Texture( ByteViewReader& reader ){
 	name = reader.readName();
 	coutName( "Texture: ", name );
 	header = reader.read( 8*4 + 1 );

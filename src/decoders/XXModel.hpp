@@ -11,7 +11,9 @@
 
 class File;
 class ByteViewReader;
-class XXFrame;
+
+namespace XX{
+class Frame;
 
 template<typename T>
 auto sumXXSize( const std::vector<T>& arr ){
@@ -19,7 +21,7 @@ auto sumXXSize( const std::vector<T>& arr ){
 		,	[](auto acc, auto t){ return t.size() + acc; } );
 }
 
-class XXMesh{
+class Mesh{
 	private:
 		ByteView unknown1;
 		int index; //Material index
@@ -28,10 +30,10 @@ class XXMesh{
 		ByteView unknown2; //Use name at end?
 		
 	public:
-		XXMesh( ByteViewReader& reader, int format, int vector2count );
+		Mesh( ByteViewReader& reader, int format, int vector2count );
 };
 
-class XXFrame{
+class Frame{
 	private:
 		//Name length
 		NotByteView name;
@@ -42,18 +44,18 @@ class XXFrame{
 		//[Submeshes]...
 		ByteView vertice_dupes; //Donno
 		ByteView bones;
-		//[XXFrame]...
+		//[Frame]...
 	
 	public:
-		std::vector<XXMesh> meshes;
-		std::vector<XXFrame> children;
+		std::vector<Mesh> meshes;
+		std::vector<Frame> children;
 		
 	public:
-		XXFrame() { } //TODO: Avoid?
-		XXFrame( ByteViewReader& reader, int format );
+		Frame() { } //TODO: Avoid?
+		Frame( ByteViewReader& reader, int format );
 };
 
-class XXMaterial{
+class Material{
 	private:
 		struct TextureRef{
 			//Name length
@@ -70,13 +72,13 @@ class XXMaterial{
 		ByteView unknown;
 		
 	public:
-		XXMaterial( ByteViewReader& reader );
+		Material( ByteViewReader& reader );
 		
 		auto size() const
 			{ return 4 + name.size() + colors.size() + sumXXSize( textures ) + unknown.size(); }
 };
 
-class XXTexture{
+class Texture{
 	public:
 		//Name length
 		NotByteView name;
@@ -85,28 +87,29 @@ class XXTexture{
 		ByteView data;
 		
 	public:
-		XXTexture( ByteViewReader& reader );
+		Texture( ByteViewReader& reader );
 		
 		auto size() const{ return 4 + name.size() + header.size() + 4 + data.size(); }
 };
 
-class XXModel{
+class Model{
 	private:
 		Buffer data;
 	
 	public:
 		ByteView data_header;
-		XXFrame frame;
+		Frame frame;
 		ByteView unknown3; //Supposedly related to materials
 		//Material count
-		std::vector<XXMaterial> materials;
+		std::vector<Material> materials;
 		//Texture count
-		std::vector<XXTexture> textures;
+		std::vector<Texture> textures;
 		ByteView unknown4; //A footer? Nah... can't be
 		
 	public:
-		XXModel( Buffer file );
+		Model( Buffer file );
 };
 
+}
 
 #endif

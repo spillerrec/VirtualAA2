@@ -72,7 +72,7 @@ static int split_xx( const wchar_t* xx_dir ){
 		makeFolder( folder, filename );
 		auto out_folder = folder + L"\\" + filename;
 		
-		XXModel xx( File( xx_path.c_str(), L"rb" ).readAll() );
+		XX::Model xx( File( xx_path.c_str(), L"rb" ).readAll() );
 		
 		for( auto& texture : xx.textures ){
 			File out( (out_folder + L"\\" + fromJapPath(texture.name.toString())).c_str(), L"wb" );
