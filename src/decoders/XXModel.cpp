@@ -104,6 +104,23 @@ Frame::Frame( ByteViewReader& reader, int format ){
 		if( vertex_count != dupe_amount )
 			std::cout << "vertices: " << vertex_count << " - " << dupe_amount << "\n";
 		
+		/*Compare meshes with dupes
+		ByteViewReader dupe_reader( vertice_dupes );
+		for( auto& mesh : meshes ){
+			auto dupes = dupe_reader.read( vertex_size * mesh.vertex_count );
+			bool match = dupes == mesh.vertexes;
+			std::cout << "mess matches: " << (match ? "yes" : "no") << "\n";
+			
+			if( !match ){
+				auto count = std::min( dupes.size(), mesh.vertexes.size() );
+				unsigned differences = 0;
+				for( unsigned i=0; i<count; i++ )
+					differences += mesh.vertexes[i] != dupes[i] ? 1 : 0;
+				std::cout << "How different: " << differences / (double)count << "\n";
+			}
+		}
+		//*/
+		
 		//bone list
 		auto bone_count = reader.read32u();
 		bones.reserve( bone_count );
