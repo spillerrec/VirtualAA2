@@ -9,6 +9,7 @@
 #include "filesystem/VirtualDataDir.hpp"
 #include "filesystem/PPFile.hpp"
 #include "resources/Deduper.hpp"
+#include "utils/ByteViewReader.hpp"
 #include "utils/File.hpp"
 #include "utils/StringView.hpp"
 
@@ -63,6 +64,9 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 	return 0;
 }
 
+constexpr bool WRITE_MESH = false;
+constexpr bool WRITE_DUPES = false;
+constexpr bool WRITE_BONES = true;
 static void write_frame_data( const std::wstring& folder, const XX::Frame& frame, int& frame_count, Deduper& dedupe_meshes ){
 	auto base_name = folder + L"frame_" + std::to_wstring( frame_count ) + L"_";
 	
@@ -70,15 +74,32 @@ static void write_frame_data( const std::wstring& folder, const XX::Frame& frame
 	int mesh_id = 0;
 	for( auto& mesh : frame.meshes ){
 		if( mesh.vertexes.size() > 0 ){
-			File out( (base_name + L"mesh_" + std::to_wstring( mesh_id++ ) ).c_str(), L"wb" );
-			out.write( mesh.vertexes );
+			if( WRITE_MESH ){
+				auto out_path = base_name + L"mesh_" + std::to_wstring( mesh_id++ );
+				File( out_path.c_str(), L"wb" ).write( mesh.vertexes );
+			}
 			dedupe_meshes.add( mesh.vertexes );
 		}
 	}
 	
 	//Output dupes
-	if( frame.vertice_dupes.size() > 0 )
+	if( WRITE_DUPES && frame.vertice_dupes.size() > 0 )
 		File( (base_name + L"dupes").c_str(), L"wb" ).write( frame.vertice_dupes );
+	
+	if( WRITE_BONES )
+		for( auto& bone : frame.bones ){
+			File out( L"bones.csv", L"ab" );
+			out.write( bone.name );
+			out.write( makeView( ", " ) );
+			out.write( makeView( std::to_string( bone.index ).c_str() ) );
+			
+			ByteViewReader reader( bone.matrix );
+			for( int i=0; i<16; i++ ){
+				out.write( makeView( ", " ) );
+				out.write( makeView ( std::to_string( reader.readFloat() ).c_str() ) );
+			}
+			out.write( makeView( "\n" ) );
+		}
 	
 	//Recurse into children
 	for( auto& child : frame.children ){
@@ -119,9 +140,9 @@ static int split_xx( const wchar_t* xx_dir ){
 	}
 	
 	std::cout << "Total mesh size: " << dedupe_meshes.total_size() << "\n";
-	std::cout << "Savings: " << dedupe_meshes.savings() << "\n";
-	std::cout << "Meshes: " << dedupe_meshes.addedCount() << "\n";
-	std::cout << "Unique: " << dedupe_meshes.savedCount() << "\n";
+	std::cout << "Savings: "         << dedupe_meshes.savings()    << "\n";
+	std::cout << "Meshes: "          << dedupe_meshes.addedCount() << "\n";
+	std::cout << "Unique: "          << dedupe_meshes.savedCount() << "\n";
 	
 	makeFolder( base_folder, L"\\meshes" );
 	int i=0;

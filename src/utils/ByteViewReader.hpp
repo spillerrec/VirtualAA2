@@ -53,6 +53,20 @@ class ByteViewReader{
 			auto lenght = read32u();
 			return { read( lenght ) };
 		}
+		
+		float readFloat(){
+			float out;
+			auto buffer = read( 4 );
+			std::copy( buffer.begin(), buffer.end(), reinterpret_cast<uint8_t*>( &out ) );
+			return out;
+		}
+		
+		double readDouble(){
+			double out;
+			auto buffer = read( 8 );
+			std::copy( buffer.begin(), buffer.end(), reinterpret_cast<uint8_t*>( &out ) );
+			return out;
+		}
 };
 
 #endif
