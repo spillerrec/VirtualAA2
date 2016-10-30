@@ -9,20 +9,23 @@
 #include "PassthroughFile.hpp"
 #include "PPFile.hpp"
 
+#include <cstring>
+
 using namespace std;
 
 std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderContent info ){
 	auto path = parent + L"\\" + info.name;
+	
+	//Prefix checker
 	auto filename = FilePath( makeView( path ) ).filename();
+	auto check = [&]( auto prefix )
+		{ return filename.startsWith( WStringView( prefix, wcslen(prefix) ) ); };
 	
-	WStringView pp_prefix( L"[PP] ", 5 );
-	if( filename.startsWith(pp_prefix) )
-		return make_unique<PPFile>( path );
+	//Check for custom handlers
+	if( check( L"[PP] "  ) )  return make_unique< PPFile>( path );
+	if( check( L"[LZ4] " ) )  return make_unique<Lz4File>( path );
 	
-	WStringView lz4_prefix( L"[LZ4] ", 6 );
-	if( filename.startsWith(lz4_prefix) )
-		return make_unique<Lz4File>( path );
-	
+	//Passthrough
 	if( info.is_dir )
 		return make_unique<PassthroughDir>( path );
 	else
