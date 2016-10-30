@@ -24,6 +24,11 @@ class ByteViewReader{
 		auto tell() const{ return position; }
 		auto left() const{ return buffer.size() - position; }
 		
+		bool seek( size_t new_position ){
+			position = new_position;
+			return left() > 0;
+		}
+		
 		ByteView makeView( unsigned from, unsigned amount ){
 			require( from+amount <= buffer.size() );
 			return ByteView( buffer.begin() + from, amount );

@@ -6,6 +6,7 @@
 #include "filesystem-win.hpp"
 #include "filesystem/FilePath.hpp"
 #include "filesystem/FileSystem.hpp"
+#include "filesystem/Lz4File.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 #include "filesystem/PPFile.hpp"
 #include "resources/Deduper.hpp"
@@ -38,6 +39,18 @@ static void copy_file_object( const FileObject& object, const wchar_t* to ){
 	}
 }
 
+static void compress_lz4_file_object( const FileObject& object, const wchar_t* to ){
+	auto handle = object.openRead();
+	
+	File out( to, L"wb" );
+	
+	auto size = object.filesize();
+	Buffer data( size );
+	handle->read( data.view(), 0 );
+	
+	Lz4File::compressFile( std::wstring(to), ConstByteView{data.begin(), data.size()} );
+}
+
 static int copy_file( const wchar_t* data_dir_path, const wchar_t* filepath, const wchar_t* to ){
 	VirtualDataDir dir( data_dir_path );
 	auto file = dir.getFromPath( { filepath } );
@@ -45,6 +58,17 @@ static int copy_file( const wchar_t* data_dir_path, const wchar_t* filepath, con
 		return error( "File not found" );
 	
 	copy_file_object( *file, to );
+	
+	return 0;
+}
+
+static int compress_lz4_file( const wchar_t* data_dir_path, const wchar_t* filepath, const wchar_t* to ){
+	VirtualDataDir dir( data_dir_path );
+	auto file = dir.getFromPath( { filepath } );
+	if( !file )
+		return error( "File not found" );
+	
+	compress_lz4_file_object( *file, to );
 	
 	return 0;
 }
@@ -182,6 +206,12 @@ int wmain( int argc, wchar_t* argv[] ){
 				return copy_file( argv[2], argv[3], argv[4] );
 			else
 				return error( "VirtualAA2 --copy <path-to-aa2-data-dir> <file-to-copy> <output-path>" );
+		}
+		if( param1 == makeView( L"--compress-lz4" ) ){
+			if( argc == 5 )
+				return compress_lz4_file( argv[2], argv[3], argv[4] );
+			else
+				return error( "VirtualAA2 --compress-lz4 <path-to-aa2-data-dir> <file-to-copy> <output-path>" );
 		}
 		else if( param1 == makeView( L"--compact-pp-test" ) ){
 			if( argc == 6 )

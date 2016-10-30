@@ -4,6 +4,7 @@
 #include "FileFactory.hpp"
 #include "FileSystem.hpp"
 #include "FilePath.hpp"
+#include "Lz4File.hpp"
 #include "PassthroughDir.hpp"
 #include "PassthroughFile.hpp"
 #include "PPFile.hpp"
@@ -17,6 +18,10 @@ std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderC
 	WStringView pp_prefix( L"[PP] ", 5 );
 	if( filename.startsWith(pp_prefix) )
 		return make_unique<PPFile>( path );
+	
+	WStringView lz4_prefix( L"[LZ4] ", 6 );
+	if( filename.startsWith(lz4_prefix) )
+		return make_unique<Lz4File>( path );
 	
 	if( info.is_dir )
 		return make_unique<PassthroughDir>( path );

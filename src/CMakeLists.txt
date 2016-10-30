@@ -11,6 +11,7 @@ set(SOURCES_DECODERS
 
 set(SOURCES_ENCODERS
 	encoders/PPCompactor.cpp
+#	encoders/XXCompactor.cpp
 	)
 
 set(SOURCES_FILESYSTEM
@@ -20,6 +21,7 @@ set(SOURCES_FILESYSTEM
 	filesystem/FileObject.cpp
 	filesystem/FileFactory.cpp
 	filesystem/FileSystem.cpp
+	filesystem/Lz4File.cpp
 	filesystem/PassthroughDir.cpp
 	filesystem/PassthroughFile.cpp
 	filesystem/PPFile.cpp
@@ -46,7 +48,7 @@ SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode" )
 add_library(VirtualAA2Core ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_FILESYSTEM} ${SOURCES_RESOURCES} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} )
 
 add_executable(VirtualAA2 main.cpp)
-target_link_libraries(VirtualAA2 VirtualAA2Core -ldokan1)
+target_link_libraries(VirtualAA2 VirtualAA2Core -ldokan1 -llz4)
 
 # Enable C++14 features
 set_property(TARGET VirtualAA2     PROPERTY CXX_STANDARD 14)

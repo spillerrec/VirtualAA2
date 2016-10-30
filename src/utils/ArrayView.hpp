@@ -91,6 +91,11 @@ class ArrayView{
 			require( amount <= size() );
 			return subView( size()-amount, amount );
 		}
+		
+		void copyTo( ArrayView<T> out ) const {
+			for( size_t i=0; i<std::min(size(), out.size()); i++ )
+				out[i] = (*this)[i];
+		}
 };
 
 using      ByteView = ArrayView<      uint8_t>;
