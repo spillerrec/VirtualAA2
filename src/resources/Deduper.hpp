@@ -22,11 +22,11 @@ class Deduper{
 	private:
 		std::vector<Resource> items;
 		
-		static Hash calculateHash( ByteView data );
 		Resource* findExisting( Hash hash );
 		const Resource* findExisting( Hash hash ) const;
 		
 	public:
+		static Hash calculateHash( ByteView data );
 		void add( ByteView resource );
 		
 		unsigned duplicated( ByteView view ) const;

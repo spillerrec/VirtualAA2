@@ -66,7 +66,7 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 
 constexpr bool WRITE_MESH = false;
 constexpr bool WRITE_DUPES = false;
-constexpr bool WRITE_BONES = true;
+constexpr bool WRITE_BONES = false;
 static void write_frame_data( const std::wstring& folder, const XX::Frame& frame, int& frame_count, Deduper& dedupe_meshes ){
 	auto base_name = folder + L"frame_" + std::to_wstring( frame_count ) + L"_";
 	
@@ -111,6 +111,7 @@ static void write_frame_data( const std::wstring& folder, const XX::Frame& frame
 static int split_xx( const wchar_t* xx_dir ){
 	Deduper dedupe_meshes;
 	Deduper dedupe_textures;
+	File text( L"textures.csv", L"wb" );
 	
 	auto base_folder = std::wstring( xx_dir );
 	for( auto file : getFolderContents( base_folder ) ){
@@ -133,10 +134,26 @@ static int split_xx( const wchar_t* xx_dir ){
 				texture.data[1] = 0x4D;
 			}
 			out.write( texture.data );
+			
+			auto hash = Deduper::calculateHash( texture.data );
+			
+			text.write( makeView( name.c_str() ) );
+			ByteViewReader reader( texture.header );
+			for( int i=0; i<8; i++ ){
+				text.write( makeView( ", " ) );
+				text.write( makeView( std::to_string( reader.read32u() ).c_str() ) );
+			}
+			text.write( makeView( ", " ) );
+			text.write( makeView( std::to_string( reader.read8u() ).c_str() ) );
+			
+			text.write( makeView( ", " ) );
+			text.write( makeView( std::to_string( hash ).c_str() ) );
+			
+			text.write( makeView( "\n" ) );
 		}
 		
 		int frame_count = 1;
-		write_frame_data( out_folder, xx.frame, frame_count, dedupe_meshes );
+	//	write_frame_data( out_folder, xx.frame, frame_count, dedupe_meshes );
 	}
 	
 	std::cout << "Total mesh size: " << dedupe_meshes.total_size() << "\n";

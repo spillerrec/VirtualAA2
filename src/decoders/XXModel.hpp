@@ -21,6 +21,16 @@ auto sumXXSize( const std::vector<T>& arr ){
 		,	[](auto acc, auto t){ return t.size() + acc; } );
 }
 
+class Vector3{
+	public:
+		float x, y, z;
+		
+		Vector3( float x, float y, float z ) : x(x), y(y), z(z) { }
+		Vector3() : Vector3( 0, 0, 0 ) { }
+		Vector3( ByteViewReader data );
+		Vector3( ByteView data );
+};
+
 class Mesh{
 	public:
 		ByteView unknown1;
@@ -99,6 +109,9 @@ class Texture{
 		Texture( ByteViewReader& reader );
 		
 		auto size() const{ return 4 + name.size() + header.size() + 4 + data.size(); }
+		
+		Buffer texture_data();
+		Buffer image_data();
 };
 
 class Model{

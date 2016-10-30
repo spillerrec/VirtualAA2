@@ -10,6 +10,18 @@
 
 using namespace XX;
 
+Vector3::Vector3( ByteViewReader reader ){
+	x = reader.readFloat();
+	y = reader.readFloat();
+	z = reader.readFloat();
+}
+
+Vector3::Vector3( ByteView data ){
+	//TODO: validate size
+	ByteViewReader reader( data );
+	*this = Vector3{ reader };
+}
+
 Model::Model( Buffer file ) : data(std::move(file)) {
 	ByteViewReader reader( data );
 	
