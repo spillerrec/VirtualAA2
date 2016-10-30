@@ -3,6 +3,7 @@
 
 #include "Lz4File.hpp"
 #include "FilePath.hpp"
+#include "BufferHandle.hpp"
 #include "mergers/PassthroughMerger.hpp"
 #include "../compressors/lz4.hpp"
 #include "../utils/ByteViewReader.hpp"
@@ -30,24 +31,6 @@ Lz4File::Lz4File( std::wstring filepath ) : filepath(filepath) {
 
 std::unique_ptr<AMergingObject> Lz4File::createMerger() const
 	{ return std::make_unique<PassthroughMerger>( *this ); }
-
-class BufferReadHandle : public FileHandle{
-	protected:
-		Buffer data;
-		ByteViewReader reader;
-		
-		BufferReadHandle( uint64_t size ) : data( size ), reader( data ) { }
-		
-	public:
-		uint64_t read( ByteView to_read, uint64_t offset ) override{
-			reader.seek( offset );
-			auto data = reader.read( std::min(to_read.size(), reader.left()) );
-			data.copyTo( to_read );
-			return data.size();
-		}
-
-		uint64_t write( ConstByteView, uint64_t ) override { return 0; }
-};
 
 class Lz4FileHandle : public BufferReadHandle{
 	public:
