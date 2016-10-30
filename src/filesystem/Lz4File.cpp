@@ -4,6 +4,7 @@
 #include "Lz4File.hpp"
 #include "FilePath.hpp"
 #include "mergers/PassthroughMerger.hpp"
+#include "../compressors/lz4.hpp"
 #include "../utils/ByteViewReader.hpp"
 #include "../utils/debug.hpp"
 #include "../utils/File.hpp"
@@ -12,15 +13,12 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <lz4.h>
-#include <lz4hc.h>
-
 Lz4File::Lz4File( std::wstring filepath ) : filepath(filepath) {
 	FilePath path( filepath.c_str() );
 	require( path.path.size() > 0 );
 	filename = path.path.back();
 	
-	// remove "[LZ4] " prefix
+	//Remove "[LZ4] " prefix
 	//TODO: assert that it exists
 	filename = filename.right( filename.size()-6 );
 	
@@ -33,43 +31,30 @@ Lz4File::Lz4File( std::wstring filepath ) : filepath(filepath) {
 std::unique_ptr<AMergingObject> Lz4File::createMerger() const
 	{ return std::make_unique<PassthroughMerger>( *this ); }
 
-class BufferHandle : public FileHandle{
+class BufferReadHandle : public FileHandle{
 	protected:
 		Buffer data;
 		ByteViewReader reader;
 		
-		void init( Buffer data ){
-			this->data = std::move(data);
-			reader = ByteViewReader( this->data );
-		}
-		BufferHandle() : reader(data) {}
+		BufferReadHandle( uint64_t size ) : data( size ), reader( data ) { }
+		
 	public:
 		uint64_t read( ByteView to_read, uint64_t offset ) override{
 			reader.seek( offset );
 			auto data = reader.read( std::min(to_read.size(), reader.left()) );
 			data.copyTo( to_read );
-			return reader.tell() - offset;
+			return data.size();
 		}
 
-		uint64_t write( ConstByteView to_write, uint64_t offset ) override{
-			//TODO: write
-			reader.seek( offset + to_write.size() );
-			return 0;
-		}
+		uint64_t write( ConstByteView, uint64_t ) override { return 0; }
 };
 
-class Lz4FileHandle : public BufferHandle{
+class Lz4FileHandle : public BufferReadHandle{
 	public:
-		Lz4FileHandle( const std::wstring& path, uint64_t filesize ) {
+		Lz4FileHandle( const std::wstring& path, uint64_t filesize ) : BufferReadHandle( filesize ) {
 			File f( path.c_str(), L"rb" );
-			f.read(4); //Already known
-			auto compressed = f.readAll();
-			
-			//TODO: decode
-			Buffer out( filesize );
-			LZ4_decompress_safe( (char*)compressed.begin(), (char*)out.begin(), compressed.size(), out.size() );
-			
-			init( std::move(out) );
+			f.read(4); //Already known //TODO: avoid alloc?
+			lz4::decompress( f.readAll().constView(), data.view() );
 		}
 };
 
@@ -80,11 +65,9 @@ bool Lz4File::compressFile( std::wstring filepath, ConstByteView data ){
 	File f( filepath.c_str(), L"wb" );
 	f.write32u( data.size() );
 	
-	Buffer out( LZ4_compressBound( data.size() ) );
-	auto result = LZ4_compress_HC( (const char*)data.begin(), (char*)out.begin(), data.size(), out.size(), LZ4HC_DEFAULT_CLEVEL );
-	if( result < 0 )
-		return false;
-		
-	f.write( out.view().left( result ) );
-	return true;
+	Buffer out( lz4::maxSize( data.size() ) );
+	auto compressed = lz4::compress( data, out.view() );
+	f.write( compressed );
+	
+	return compressed.size() > 0;
 }

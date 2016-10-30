@@ -30,7 +30,10 @@ class Buffer{
 		ArrayView<      uint8_t> view()      { return { data(), size() }; }
 		
 		/// @return An immutable ArrayView of this array
-		ArrayView<const uint8_t> view() const{ return { data(), size() }; }
+		ArrayView<const uint8_t> constView() const{ return { data(), size() }; }
+		
+		/// @return An immutable ArrayView of this array
+		ArrayView<const uint8_t> view() const{ return constView(); }
 		
 	public:
 		Buffer() = default;

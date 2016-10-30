@@ -14,6 +14,10 @@ set(SOURCES_ENCODERS
 #	encoders/XXCompactor.cpp
 	)
 
+set(SOURCES_COMPRESSORS
+	compressors/lz4.cpp
+	)
+
 set(SOURCES_FILESYSTEM
 	filesystem/mergers/AMergingObject.cpp
 	filesystem/mergers/FakeDir.cpp
@@ -45,7 +49,7 @@ set(SOURCES_USER_FILESYSTEM filesystem-win.cpp)
 ADD_DEFINITIONS(-DUNICODE)
 SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode" )
 
-add_library(VirtualAA2Core ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_FILESYSTEM} ${SOURCES_RESOURCES} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} )
+add_library(VirtualAA2Core ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_COMPRESSORS} ${SOURCES_FILESYSTEM} ${SOURCES_RESOURCES} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} )
 
 add_executable(VirtualAA2 main.cpp)
 target_link_libraries(VirtualAA2 VirtualAA2Core -ldokan1 -llz4)
