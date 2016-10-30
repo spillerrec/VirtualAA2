@@ -5,6 +5,7 @@
 #include "FileSystem.hpp"
 #include "FilePath.hpp"
 #include "Lz4File.hpp"
+#include "LzmaFile.hpp"
 #include "PassthroughDir.hpp"
 #include "PassthroughFile.hpp"
 #include "PPFile.hpp"
@@ -22,8 +23,9 @@ std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderC
 		{ return filename.startsWith( WStringView( prefix, wcslen(prefix) ) ); };
 	
 	//Check for custom handlers
-	if( check( L"[PP] "  ) )  return make_unique< PPFile>( path );
-	if( check( L"[LZ4] " ) )  return make_unique<Lz4File>( path );
+	if( check( L"[PP] "   ) )  return make_unique<  PPFile>( path );
+	if( check( L"[LZ4] "  ) )  return make_unique< Lz4File>( path );
+	if( check( L"[LZMA] " ) )  return make_unique<LzmaFile>( path );
 	
 	//Passthrough
 	if( info.is_dir )
