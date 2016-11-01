@@ -1,18 +1,18 @@
 /*	This file is part of VirtualAA2, which is free software and is licensed
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
-#ifndef LZMA_FILE_HPP
-#define LZMA_FILE_HPP
+#ifndef DEFLATE_FILE_HPP
+#define DEFLATE_FILE_HPP
 
 #include "CompressedFile.hpp"
 
 #include <string>
 
-class LzmaFile : public CompressedFile{
+class DeflateFile : public CompressedFile{
 	public:
-		LzmaFile( std::wstring filepath ) : CompressedFile( filepath, L"[LZMA] " ) { }
+		DeflateFile( std::wstring filepath ) : CompressedFile( filepath, L"[DEFLATE] " ) { }
 		
 		std::unique_ptr<FileHandle> openRead() const override;
-		FileObjectId type() const override{ return 21; }
+		FileObjectId type() const override{ return 22; }
 		
 		static bool compressFile( std::wstring filepath, ConstByteView data );
 };

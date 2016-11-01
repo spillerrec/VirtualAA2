@@ -15,6 +15,7 @@ set(SOURCES_ENCODERS
 	)
 
 set(SOURCES_COMPRESSORS
+	compressors/deflate.cpp
 	compressors/lz4.cpp
 	compressors/lzma.cpp
 	)
@@ -23,6 +24,8 @@ set(SOURCES_FILESYSTEM
 	filesystem/mergers/AMergingObject.cpp
 	filesystem/mergers/FakeDir.cpp
 	filesystem/mergers/MergedPPFile.cpp
+	filesystem/CompressedFile.cpp
+	filesystem/DeflateFile.cpp
 	filesystem/FileObject.cpp
 	filesystem/FileFactory.cpp
 	filesystem/FileSystem.cpp
@@ -54,7 +57,7 @@ SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode" )
 add_library(VirtualAA2Core ${SOURCES_DECODERS} ${SOURCES_ENCODERS} ${SOURCES_COMPRESSORS} ${SOURCES_FILESYSTEM} ${SOURCES_RESOURCES} ${SOURCES_UTILS} ${SOURCES_USER_FILESYSTEM} )
 
 add_executable(VirtualAA2 main.cpp)
-target_link_libraries(VirtualAA2 VirtualAA2Core -ldokan1 -llz4 -llzma)
+target_link_libraries(VirtualAA2 VirtualAA2Core -ldokan1 -llz4 -lz -llzma)
 
 # Enable C++14 features
 set_property(TARGET VirtualAA2     PROPERTY CXX_STANDARD 14)

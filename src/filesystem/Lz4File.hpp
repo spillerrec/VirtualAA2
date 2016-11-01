@@ -3,28 +3,15 @@
 #ifndef LZ4_FILE_HPP
 #define LZ4_FILE_HPP
 
-#include "FileObject.hpp"
+#include "CompressedFile.hpp"
 
 #include <string>
 
-class Lz4File : public FileObject{
-	private:
-		std::wstring filepath;
-		WStringView filename;
-		uint64_t file_size;
-		
+class Lz4File : public CompressedFile{
 	public:
-		Lz4File( std::wstring filepath );
-		
-		WStringView name() const override{ return filename; }
-		bool isDir()    const override{ return false; }
-		bool canWrite() const override{ return false; }
-		uint64_t filesize() const override{ return file_size; }
+		Lz4File( std::wstring filepath ) : CompressedFile( filepath, L"[LZ4] " ) { }
 		
 		std::unique_ptr<FileHandle> openRead() const override;
-		
-		std::unique_ptr<AMergingObject> createMerger() const override;
-		
 		FileObjectId type() const override{ return 20; }
 		
 		static bool compressFile( std::wstring filepath, ConstByteView data );
