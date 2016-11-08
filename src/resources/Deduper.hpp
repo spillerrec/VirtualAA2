@@ -26,7 +26,7 @@ class Deduper{
 		const Resource* findExisting( Hash hash ) const;
 		
 	public:
-		static Hash calculateHash( ByteView data );
+		static Hash calculateHash( ConstByteView data );
 		void add( ByteView resource );
 		
 		unsigned duplicated( ByteView view ) const;

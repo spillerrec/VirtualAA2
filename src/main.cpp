@@ -159,7 +159,7 @@ static int split_xx( const wchar_t* xx_dir ){
 			}
 			out.write( texture.data );
 			
-			auto hash = Deduper::calculateHash( texture.data );
+			auto hash = Deduper::calculateHash( makeConst(texture.data) );
 			
 			text.write( makeView( name.c_str() ) );
 			ByteViewReader reader( texture.header );

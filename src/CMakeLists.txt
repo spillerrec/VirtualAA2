@@ -4,12 +4,14 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 set(SOURCES_DECODERS
+	decoders/BulkArchive.cpp
 	decoders/PPArchive.cpp
 	decoders/PPCrypto.cpp
 	decoders/XXModel.cpp
 	)
 
 set(SOURCES_ENCODERS
+	encoders/BulkArchiveWriter.cpp
 	encoders/PPCompactor.cpp
 #	encoders/XXCompactor.cpp
 	)

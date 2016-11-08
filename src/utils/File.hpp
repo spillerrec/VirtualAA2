@@ -46,7 +46,9 @@ class FileOperations{
 			{ return fwrite( view.begin(), sizeof(T), view.size(), handle ); }
 		
 		auto write( const Buffer& buffer ){ return write( buffer.view() ); }
+		auto write8u(  uint8_t  value ){ return write( ArrayView<uint8_t >( &value, 1 ) ); }
 		auto write32u( uint32_t value ){ return write( ArrayView<uint32_t>( &value, 1 ) ); }
+		auto write64u( uint64_t value ){ return write( ArrayView<uint64_t>( &value, 1 ) ); }
 };
 
 /** Owning File reading/writing */

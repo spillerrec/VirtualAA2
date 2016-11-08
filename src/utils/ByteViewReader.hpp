@@ -11,6 +11,8 @@
 inline uint32_t convert32unsigned( uint8_t a, uint8_t b, uint8_t c, uint8_t d )
 	{ return a + (b<<8) + (c<<16) + (d<<24); }
 
+inline uint64_t convert64unsigned( uint32_t a, uint32_t b )
+	{ return a + (uint64_t(b)<<32); }
 
 class ByteViewReader{
 	private:
@@ -52,6 +54,12 @@ class ByteViewReader{
 		uint32_t read32u(){
 			auto b = read( 4 );
 			return convert32unsigned( b[0], b[1], b[2], b[3] );
+		}
+		
+		uint64_t read64u(){
+			auto a = read32u();
+			auto b = read32u();
+			return convert64unsigned( a, b );
 		}
 		
 		ByteView readName(){

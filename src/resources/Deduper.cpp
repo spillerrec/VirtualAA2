@@ -6,7 +6,9 @@
 #include <boost/crc.hpp>
 #include <numeric>
 
-Deduper::Hash Deduper::calculateHash( ByteView data ){
+//TODO: Check const correctness of ByteViews
+
+Deduper::Hash Deduper::calculateHash( ConstByteView data ){
 	boost::crc_32_type crc;
 	crc.process_bytes( data.begin(), data.size() );
 	return crc.checksum();
@@ -29,7 +31,7 @@ const Deduper::Resource* Deduper::findExisting( Deduper::Hash hash ) const{
 }
 
 void Deduper::add( ByteView data ){
-	auto hash = calculateHash( data );
+	auto hash = calculateHash( makeConst(data) );
 	auto resource = findExisting( hash );
 	if( resource )
 		resource->sources.push_back( data );
@@ -39,7 +41,7 @@ void Deduper::add( ByteView data ){
 
 unsigned Deduper::duplicated( ByteView view ) const{
 	//TODO: look after view without accessing data?
-	auto resource = findExisting( calculateHash( view ) );
+	auto resource = findExisting( calculateHash( makeConst(view) ) );
 	return resource ? resource->sources.size() : 0;
 }
 

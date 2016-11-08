@@ -101,6 +101,9 @@ class ArrayView{
 using      ByteView = ArrayView<      uint8_t>;
 using ConstByteView = ArrayView<const uint8_t>;
 
+inline ConstByteView makeConst( ByteView view )
+	{ return ConstByteView( view.begin(), view.size() ); }
+
 struct NotByteView : public ByteView {
 	NotByteView() {}
 	NotByteView( ByteView view ) : ByteView( view ) { }
