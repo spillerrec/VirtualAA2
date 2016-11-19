@@ -42,6 +42,11 @@ static unsigned read32u( File& file, HeaderDecrypter& decrypter ){
 			at specified offsets in [SUBFILE]'s
 */
 
+Header::Header( const wchar_t* path ){
+	File f( path, L"rb" );
+	*this = Header( f );
+}
+
 Header::Header( File& file ){
 	//Seek to file count, and read file
 	file.seek( 8 + 4 + 1, 0 );
@@ -66,8 +71,11 @@ Header::Header( File& file ){
 	//TODO: assert last bit?
 }
 
-Header::SubFile Header::begin() { return { header.constView(), 17 +   0*file_count }; }
-Header::SubFile Header::end()   { return { header.constView(), 17 + 288*file_count }; }
+Header::SubFile Header::operator[]( uint32_t index ) const
+	{ return { header.constView(), 17 + 288*index }; }
+
+Header::SubFile Header::begin() { return (*this)[     0    ]; }
+Header::SubFile Header::end()   { return (*this)[file_count]; }
 
 Header::SubFile::SubFile( ConstByteView data, uint32_t offset )
 	:	file( data.subView( offset, 288 ) ) { }

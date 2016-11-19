@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <iostream>
 
-const FolderContent* shiftJisBinarySearch( const std::vector<FolderContent>& array, ByteView comp ){
+const FolderContent* shiftJisBinarySearch( const std::vector<FolderContent>& array, ConstByteView comp ){
 	//See if we can get away with just comparing directly
 	if( shiftJisOnlySingleBytes( comp ) ){
 		auto it = std::lower_bound( array.begin(), array.end(), comp
@@ -47,8 +47,8 @@ PPFolder::PPFolder( std::wstring filepath ) : filepath(filepath) {
 	//NOTE: We should change the format so it contains the amount of subfiles
 	while( reader.left() > 0 ){
 		PPSubFile subfile;
-		subfile.filename = reader.readName();
-		subfile.metadata = reader.read( 20 );
+		subfile.filename = makeConst(reader.readName());
+		subfile.metadata = makeConst(reader.read( 20 ));
 		subfile.file = nullptr;
 		
 		files.emplace_back( std::move(subfile) );

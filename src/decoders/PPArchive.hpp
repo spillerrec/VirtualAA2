@@ -16,10 +16,13 @@ class Header{
 		uint32_t file_count;
 	
 	public:
+		Header( const wchar_t* path );
 		Header( File& file );
 		
 		static const uint8_t magic[];
 		static const int magic_length = 8;
+		
+		auto count() const{ return file_count; }
 		
 		struct SubFile{
 			ConstByteView file;
@@ -38,6 +41,7 @@ class Header{
 		
 		SubFile begin();
 		SubFile end();
+		SubFile operator[]( uint32_t index ) const;
 };
 
 Buffer readFile( File& file, uint32_t offset, uint32_t size );

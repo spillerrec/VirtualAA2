@@ -10,8 +10,8 @@
 #include <vector>
 
 struct PPSubFile{
-	ByteView filename;
-	ByteView metadata;
+	ConstByteView filename;
+	ConstByteView metadata;
 	FileObject* file;
 };
 

@@ -33,7 +33,7 @@ std::vector<ArrayView<T>> split( ArrayView<T> view, T split_on ){
 	return out;
 }
 
-inline bool shiftJisOnlySingleBytes( ByteView jis ){
+inline bool shiftJisOnlySingleBytes( ConstByteView jis ){
 	auto isSingleByte = [](auto c){ return !(c & ~0x7F); };
 	return std::all_of( jis.begin(), jis.end(), isSingleByte );
 }
