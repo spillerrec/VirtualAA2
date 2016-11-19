@@ -60,7 +60,8 @@ Header::Header( File& file ){
 	
 	//Read entire header
 	file.seek( 0, 0 );
-	header = file.read( 17 + 288*file_count + 4 );
+	auto header_size = 17 + 288*file_count + 4;
+	header = file.read( header_size );
 	
 	//Decrypt everything
 	decrypter = {};
@@ -72,7 +73,8 @@ Header::Header( File& file ){
 	decrypter = {};
 	decrypter.decrypt( header.view().right( 4 ) );
 	
-	//TODO: assert last bit?
+	//Assert data offset stored at the end of the header
+	always( ByteViewReader( header.view().right( 4 ) ).read32u() == header_size, "PP header size did not match" );
 }
 
 Header::SubFile Header::operator[]( uint32_t index ) const

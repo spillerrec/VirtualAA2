@@ -60,8 +60,10 @@ class FileOffsetHandle : public FileHandle{
 			: file(str.c_str(), L"rb"), base_offset(offset) { }
 		
 		uint64_t read( ByteView to_read,  uint64_t offset ) override{
-			if( current_pos != offset )
+			if( current_pos != offset ){
 				file.seek( offset, base_offset );
+				current_pos = offset;
+			}
 			current_pos += file.read( to_read );
 			return current_pos - offset;
 		}
