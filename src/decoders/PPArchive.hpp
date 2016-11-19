@@ -5,36 +5,43 @@
 
 #include "../utils/Buffer.hpp"
 
-#include <vector>
-
 class File;
 
 namespace PP{
 class HeaderDecrypter;
 
-struct SubFile{
-	Buffer filename;
-	uint32_t size, offset;
-	Buffer metadata;
+class Header{
+	private:
+		Buffer header;
+		uint32_t file_count;
 	
-	SubFile( Buffer filename, uint32_t size, uint32_t offset, Buffer metadata )
-		:	filename(std::move(filename)), size(size), offset(offset), metadata(std::move(metadata)) {}
-	
-	SubFile( File& file, HeaderDecrypter& decrypter );
-	Buffer getFile( File& file );
-};
-
-}
-
-class PPArchive{
 	public:
+		Header( File& file );
+		
 		static const uint8_t magic[];
 		static const int magic_length = 8;
-		std::vector<PP::SubFile> files;
 		
-	public:
-		PPArchive( File& file );
+		struct SubFile{
+			ConstByteView file;
+			
+			ConstByteView filename() const;
+			ConstByteView metadata() const;
+			uint32_t size() const;
+			uint32_t offset() const;
+			
+			SubFile( ConstByteView data, uint32_t offset );
+			SubFile& operator++();
+			bool operator!=( const SubFile& other ) const
+				{ return file.begin() != other.file.begin(); }
+			SubFile& operator*(){ return *this; }
+		};
+		
+		SubFile begin();
+		SubFile end();
 };
 
+Buffer readFile( File& file, uint32_t offset, uint32_t size );
+
+}
 
 #endif

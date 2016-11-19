@@ -8,6 +8,8 @@
 #include "../decoders/PPArchive.hpp"
 #include "../utils/File.hpp"
 
+#include "../encoders/BulkArchiveWriter.hpp"
+
 #include <iostream>
 
 using namespace std;
@@ -21,24 +23,30 @@ void PPCompactor::importPP( std::wstring path ){
 	auto prefix = folder_name + L"\\" + file_name + L"\\";
 	
 	File file( path.c_str() );
-	PPArchive pp( file );
+	PP::Header pp( file );
 	
 	//Write header
 	File fheader( (prefix + L"__HEADER").c_str(), L"wb" );
-	for( auto& f : pp.files ){
-		auto name = f.filename.view().left( f.filename.view().findIndex( '\0' ) );
+	for( auto& f : pp ){
+		auto name = f.filename().left( f.filename().findIndex( '\0' ) );
 		fheader.write32u( name.size() );
 		fheader.write( name );
-		fheader.write( f.metadata );
+		fheader.write( f.metadata() );
 	}
 	
 	
 	//Write sub-files
-	for( auto& f : pp.files ){
-		auto output = f.getFile( file );
-		auto wide_name = fromJapPath( f.filename.view() );
+	for( auto& f : pp ){
+		auto output = PP::readFile( file, f.offset(), f.size() );
+		auto wide_name = fromJapPath( f.filename() );
 		
 		File fout( (prefix + wide_name).c_str(), L"wb" );
 		fout.write( output.view() );
 	}
+	
+	//*
+	BulkArchiveWriter archive( (prefix + L"__BULK").c_str() );
+	for( auto& f : pp )
+		archive.write( PP::readFile( file, f.offset(), f.size() ).constView() );
+	//*/
 }

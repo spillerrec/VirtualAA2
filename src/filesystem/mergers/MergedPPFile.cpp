@@ -146,14 +146,14 @@ class PPFileHandle : public FileHandle{
 		
 		//TODO: assert in all of those, expected end is the same as bytes read?
 		uint64_t readHeaderHeader( OffsetView view ){
-			view.copyInto( 0, 0, ConstByteView{ PPArchive::magic, PPArchive::magic_length } );
+			view.copyInto( 0, 0, ConstByteView{ PP::Header::magic, PP::Header::magic_length } );
 			
 			//TODO: version 4
-			view.copyIntoEncrypt( PPArchive::magic_length, 0, UInt32View( 109 ).view(), PP::HeaderDecrypter() ); //TODO:
+			view.copyIntoEncrypt( PP::Header::magic_length, 0, UInt32View( 109 ).view(), PP::HeaderDecrypter() ); //TODO:
 			//TODO: unknown1 1
-			view.copyInto( PPArchive::magic_length, 4, UInt32View( 0x35 ).view() ); //TODO:
+			view.copyInto( PP::Header::magic_length, 4, UInt32View( 0x35 ).view() ); //TODO:
 			//File count
-			view.copyIntoEncrypt( PPArchive::magic_length, 5, UInt32View( pp.subfiles().size() ).view(), PP::HeaderDecrypter() );
+			view.copyIntoEncrypt( PP::Header::magic_length, 5, UInt32View( pp.subfiles().size() ).view(), PP::HeaderDecrypter() );
 			
 			return view.leftAt( header_header_size ).view.size();
 		}

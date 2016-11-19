@@ -79,6 +79,7 @@ class ArrayView{
 		auto findIndex( const T& needle ) const{ return find( needle ) - begin(); }
 		
 		ArrayView<T> subView( int start, size_t amount ){ return { data+start, amount }; } //TODO: check range in debug mode
+		ArrayView<T> subView( int start, size_t amount ) const { return { data+start, amount }; } //TODO: check range in debug mode
 		
 		/// @return A new view containing 'amount' of elements from the start
 		ArrayView<T> left(  size_t amount ){
