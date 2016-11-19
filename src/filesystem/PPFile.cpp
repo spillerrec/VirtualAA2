@@ -49,6 +49,7 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 		PPSubFile subfile;
 		subfile.filename = reader.readName();
 		subfile.metadata = reader.read( 20 );
+		subfile.file = nullptr;
 		
 		files.emplace_back( std::move(subfile) );
 	}
@@ -61,8 +62,10 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	for( auto& file : files ){
 		//Lookup in folder_files
 		auto folder = shiftJisBinarySearch( folder_files, file.filename );
-		if( folder )
-			file.file = FileFactory::makeFileObject( filepath, *folder );
+		if( folder ){
+			objects.push_back( FileFactory::makeFileObject( filepath, *folder ) );
+			file.file = objects.back().get();
+		}
 		else{
 			std::cerr << "Could not find file: \"" << file.filename.toBasicString().c_str() << "\"\n";
 			throw std::runtime_error( "Could not find file!" );

@@ -12,7 +12,7 @@
 struct PPSubFile{
 	ByteView filename;
 	ByteView metadata;
-	std::unique_ptr<FileObject> file;
+	FileObject* file;
 };
 
 class PPFile : public FileObject{
@@ -22,6 +22,7 @@ class PPFile : public FileObject{
 		
 		Buffer header;
 		std::vector<PPSubFile> files;
+		std::vector<std::unique_ptr<FileObject>> objects;
 		
 	public:
 		PPFile( std::wstring filepath );
