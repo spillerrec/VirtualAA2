@@ -35,7 +35,7 @@ set(SOURCES_FILESYSTEM
 	filesystem/LzmaFile.cpp
 	filesystem/PassthroughDir.cpp
 	filesystem/PassthroughFile.cpp
-	filesystem/PPFile.cpp
+	filesystem/PPFolder.cpp
 	filesystem/VirtualDataDir.cpp
 	)
 

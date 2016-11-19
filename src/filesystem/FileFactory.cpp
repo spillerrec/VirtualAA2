@@ -9,7 +9,7 @@
 #include "LzmaFile.hpp"
 #include "PassthroughDir.hpp"
 #include "PassthroughFile.hpp"
-#include "PPFile.hpp"
+#include "PPFolder.hpp"
 
 #include <cstring>
 
@@ -24,7 +24,8 @@ std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderC
 		{ return filename.startsWith( WStringView( prefix, wcslen(prefix) ) ); };
 	
 	//Check for custom handlers
-	if( check( L"[PP] "      ) )  return make_unique<     PPFile>( path );
+	//TODO: different checks for files and folders?
+	if( check( L"[PP] "      ) )  return make_unique<   PPFolder>( path );
 	if( check( L"[LZ4] "     ) )  return make_unique<    Lz4File>( path );
 	if( check( L"[LZMA] "    ) )  return make_unique<   LzmaFile>( path );
 	if( check( L"[DEFLATE] " ) )  return make_unique<DeflateFile>( path );

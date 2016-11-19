@@ -1,7 +1,7 @@
 /*	This file is part of VirtualAA2, which is free software and is licensed
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
-#include "PPFile.hpp"
+#include "PPFolder.hpp"
 #include "FileSystem.hpp"
 #include "FilePath.hpp"
 #include "FileFactory.hpp"
@@ -33,7 +33,7 @@ const FolderContent* shiftJisBinarySearch( const std::vector<FolderContent>& arr
 	}
 }
 
-PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
+PPFolder::PPFolder( std::wstring filepath ) : filepath(filepath) {
 	FilePath path( this->filepath.c_str() );
 	auto folder = path.filename();
 	//require( path.path.size() > 0 );
@@ -73,7 +73,7 @@ PPFile::PPFile( std::wstring filepath ) : filepath(filepath) {
 	}
 }
 
-std::unique_ptr<AMergingObject> PPFile::createMerger() const {
+std::unique_ptr<AMergingObject> PPFolder::createMerger() const {
 	return std::make_unique<MergedPPFile>( filename.toBasicString(), files );
 }
 

@@ -8,7 +8,7 @@
 #include "filesystem/FileSystem.hpp"
 #include "filesystem/Lz4File.hpp"
 #include "filesystem/VirtualDataDir.hpp"
-#include "filesystem/PPFile.hpp"
+#include "filesystem/PPFolder.hpp"
 #include "resources/Deduper.hpp"
 #include "utils/ByteViewReader.hpp"
 #include "utils/File.hpp"
@@ -81,7 +81,7 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 	
 	PPCompactor::importPP( out_path );
 	
-	PPFile pp( std::wstring(dir) + L"[PP] " + name );
+	PPFolder pp( std::wstring(dir) + L"[PP] " + name );
 	
 	copy_file_object( *pp.createMerger(), (out_path + L".virtualized").c_str() );
 	

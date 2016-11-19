@@ -4,7 +4,7 @@
 #define MERGED_PP_FILE_HPP
 
 #include "AMergingObject.hpp"
-#include "../PPFile.hpp"
+#include "../PPFolder.hpp"
 
 #include <string>
 #include <vector>

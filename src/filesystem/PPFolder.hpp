@@ -1,7 +1,7 @@
 /*	This file is part of VirtualAA2, which is free software and is licensed
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
-#ifndef PP_FILE_HPP
-#define PP_FILE_HPP
+#ifndef PP_FOLDER_HPP
+#define PP_FOLDER_HPP
 
 #include "FileObject.hpp"
 #include "../utils/Buffer.hpp"
@@ -15,7 +15,7 @@ struct PPSubFile{
 	FileObject* file;
 };
 
-class PPFile : public FileObject{
+class PPFolder : public FileObject{
 	private:
 		std::wstring filepath;
 		WStringView filename;
@@ -25,7 +25,7 @@ class PPFile : public FileObject{
 		std::vector<std::unique_ptr<FileObject>> objects;
 		
 	public:
-		PPFile( std::wstring filepath );
+		PPFolder( std::wstring filepath );
 		
 		WStringView name() const override{ return filename; }
 		bool isDir() const override{ return false; }
