@@ -34,10 +34,10 @@ Mods no longer needs to be packaged to `.pp` archives which makes it a lot easie
 - Deduplication in `.xa` files
 - Parse character `.png` files and check if all dependencies are meet
 - Support revisions of save files (save-cramming)
-- Support config files, allow the package to contain the default configuation, and save all active configuration files in a special folder
+- Support config files, allow the package to contain the default configuration, and save all active configuration files in a special folder
 
 ##Big issues
-- VirtualizedAA2 needs to be restarted to add/disable mods, which is a design decision to avoid complicated multi-threading code. Might be changed in the future, but not considered for now.
+- VirtualAA2 needs to be restarted to add/disable mods, which is a design decision to avoid complicated multi-threading code. Might be changed in the future, but not considered for now.
 - Packages are not read-only, you can still modify the files due to a bug
 - Game not loading at full speed, due to an issue in Dokan which is being worked on
-- BSOD are possible if you kill VirtualizedAA2 while the game is running, or other bugs in Dokan
+- BSOD are possible if you kill VirtualAA2 while the game is running, or other bugs in Dokan
