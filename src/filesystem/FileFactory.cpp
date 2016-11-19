@@ -13,6 +13,8 @@
 #include "PPFolder.hpp"
 
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
@@ -24,15 +26,22 @@ std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderC
 	auto check = [&]( auto prefix )
 		{ return filename.startsWith( WStringView( prefix, wcslen(prefix) ) ); };
 	
-	//Check for custom handlers
-	//TODO: different checks for files and folders?
-	if( check( L"[PP] "      ) )  return make_unique<   PPFolder>( path );
-	if( check( L"[LZ4] "     ) )  return make_unique<    Lz4File>( path );
-	if( check( L"[LZMA] "    ) )  return make_unique<   LzmaFile>( path );
-	if( check( L"[DEFLATE] " ) )  return make_unique<DeflateFile>( path );
-	
-//	if( filename.size() > 3 )
-//	if( filename.right(3) == WStringView(L".pp", 3) ) return make_unique<  PPFile>( path );
+	try{
+		//Check for custom handlers
+		//TODO: different checks for files and folders?
+		if( check( L"[PP] "      ) )  return make_unique<   PPFolder>( path );
+		if( check( L"[LZ4] "     ) )  return make_unique<    Lz4File>( path );
+		if( check( L"[LZMA] "    ) )  return make_unique<   LzmaFile>( path );
+		if( check( L"[DEFLATE] " ) )  return make_unique<DeflateFile>( path );
+		
+		if( filename.size() > 3 )
+		if( filename.right(3) == WStringView(L".pp", 3) ) return make_unique<  PPFile>( path );
+	}
+	catch( std::exception& exception ){
+		//Fall back to Passthrough
+		std::wcout << L"Warning, failed to initialize handler for: " << path.c_str() << L"\n";
+		std::cout << "\t" << exception.what() << "\n";
+	}
 	
 	//Passthrough
 	if( info.is_dir )

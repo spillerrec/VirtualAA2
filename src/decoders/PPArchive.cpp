@@ -48,9 +48,13 @@ Header::Header( const wchar_t* path ){
 }
 
 Header::Header( File& file ){
-	//Seek to file count, and read file
-	file.seek( 8 + 4 + 1, 0 );
+	//Check header
+	file.seek( 0, 0 );
+	auto magic_bytes = file.read( 8 );
+	always( magic_bytes.view() == ConstByteView( magic, magic_length ), "Wrong magic bytes for PP file" );
 	
+	//Seek to file count, and read decode it
+	file.seek( 8 + 4 + 1, 0 );
 	HeaderDecrypter decrypter;
 	file_count = read32u( file, decrypter );
 	
