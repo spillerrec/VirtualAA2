@@ -5,6 +5,7 @@
 
 #include "FileObject.hpp"
 #include "FileSystem.hpp"
+#include "TypeIDs.hpp"
 
 #include <string>
 
@@ -31,7 +32,7 @@ class PassthroughFile : public FileObject{
 		
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
-		FileObjectId type() const override{ return 1; }
+		FileObjectId type() const override{ return ID::PASS_FILE; }
 };
 
 #endif

@@ -4,6 +4,7 @@
 #define LZ4_FILE_HPP
 
 #include "CompressedFile.hpp"
+#include "TypeIDs.hpp"
 
 #include <string>
 
@@ -12,7 +13,7 @@ class Lz4File : public CompressedFile{
 		Lz4File( std::wstring filepath ) : CompressedFile( filepath, L"[LZ4] " ) { }
 		
 		std::unique_ptr<FileHandle> openRead() const override;
-		FileObjectId type() const override{ return 20; }
+		FileObjectId type() const override{ return ID::LZ4; }
 		
 		static bool compressFile( std::wstring filepath, ConstByteView data );
 };

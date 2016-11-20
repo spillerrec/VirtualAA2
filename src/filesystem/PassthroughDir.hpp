@@ -4,6 +4,7 @@
 #define PASSTHROUGH_DIR_HPP
 
 #include "FileObject.hpp"
+#include "TypeIDs.hpp"
 
 #include <string>
 #include <vector>
@@ -23,7 +24,7 @@ class PassthroughDir : public FileObjectWithChildren{
 		bool canWrite() const override{ return false; }
 		uint64_t filesize() const override{ return 0; }
 		
-		FileObjectId type() const override{ return 2; }
+		FileObjectId type() const override{ return ID::PASS_DIR; }
 		std::unique_ptr<AMergingObject> createMerger() const override;
 };
 

@@ -4,6 +4,7 @@
 #define MERGED_PP_FILE_HPP
 
 #include "AMergingObject.hpp"
+#include "../TypeIDs.hpp"
 #include "../PPFolder.hpp"
 
 #include <string>
@@ -47,7 +48,7 @@ class MergedPPFile : public AMergingObject{
 		
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
-		FileObjectId type() const override{ return 6; }
+		FileObjectId type() const override{ return ID::PP_MERGER; }
 };
 
 #endif

@@ -4,6 +4,7 @@
 #define PASSTHROUGH_MERGER_HPP
 
 #include "AMergingObject.hpp"
+#include "../TypeIDs.hpp"
 
 class PassthroughMerger : public AMergingObject{
 	protected:
@@ -23,7 +24,7 @@ class PassthroughMerger : public AMergingObject{
 		std::unique_ptr<FileHandle> openWrite()  const override { return parent.openWrite(); }
 		std::unique_ptr<FileHandle> openAppend() const override { return parent.openAppend(); }
 		
-		FileObjectId type() const override { return parent.type(); } //TODO: no no...
+		FileObjectId type() const override { return ID::PASS_MERGER; }
 		uint64_t children() const override { return parent.children(); }
 		const FileObject& operator[]( int index ) const override { return parent[index]; }
 		

@@ -4,6 +4,7 @@
 #define PP_FILE_HPP
 
 #include "PPFolder.hpp"
+#include "TypeIDs.hpp"
 
 #include "../decoders/PPArchive.hpp"
 
@@ -28,7 +29,7 @@ class PPFile : public FileObject{
 				uint64_t filesize() const override;
 				std::unique_ptr<FileHandle> openRead() const override;
 				std::unique_ptr<AMergingObject> createMerger() const override;
-				FileObjectId type() const override{ return 423; }
+				FileObjectId type() const override{ return ID::PP_FILE_READER; }
 		};
 		
 		PP::Header header;
@@ -44,7 +45,7 @@ class PPFile : public FileObject{
 		
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
-		FileObjectId type() const override{ return 4; }
+		FileObjectId type() const override{ return ID::PP_FILE; }
 		
 		PP::Header::SubFile get( unsigned index ) const;
 };

@@ -4,6 +4,7 @@
 #define FAKE_DIR_HPP
 
 #include "AMergingObject.hpp"
+#include "../TypeIDs.hpp"
 
 #include <string>
 #include <vector>
@@ -26,7 +27,7 @@ class FakeDir : public AMergingObjectWithChildren{
 		
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
-		FileObjectId type() const override{ return 3; }
+		FileObjectId type() const override{ return ID::FAKE_DIR; }
 };
 
 #endif

@@ -4,6 +4,7 @@
 #define PP_FOLDER_HPP
 
 #include "FileObject.hpp"
+#include "TypeIDs.hpp"
 #include "../utils/Buffer.hpp"
 
 #include <string>
@@ -33,7 +34,7 @@ class PPFolder : public FileObject{
 		
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
-		FileObjectId type() const override{ return 4; }
+		FileObjectId type() const override{ return ID::PP_FOLDER; }
 };
 
 #endif

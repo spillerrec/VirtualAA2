@@ -4,6 +4,7 @@
 #define DEFLATE_FILE_HPP
 
 #include "CompressedFile.hpp"
+#include "TypeIDs.hpp"
 
 #include <string>
 
@@ -12,7 +13,7 @@ class DeflateFile : public CompressedFile{
 		DeflateFile( std::wstring filepath ) : CompressedFile( filepath, L"[DEFLATE] " ) { }
 		
 		std::unique_ptr<FileHandle> openRead() const override;
-		FileObjectId type() const override{ return 22; }
+		FileObjectId type() const override{ return ID::DEFLATE; }
 		
 		static bool compressFile( std::wstring filepath, ConstByteView data );
 };
