@@ -48,6 +48,8 @@ class PPFile : public FileObject{
 		FileObjectId type() const override{ return ID::PP_FILE; }
 		
 		PP::Header::SubFile get( unsigned index ) const;
+		
+		auto& subfiles() const{ return files; }
 };
 
 #endif

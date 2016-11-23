@@ -25,6 +25,8 @@ class MergedPPFile : public AMergingObject{
 		std::wstring filename;
 		std::vector<PPSubFileReference> files;
 		
+		bool contains( const PPSubFile& file ) const;
+		
 	public:
 		MergedPPFile( std::wstring filename ) : filename(filename) { }
 		MergedPPFile( std::wstring filename, const std::vector<PPSubFile>& files )
@@ -49,6 +51,10 @@ class MergedPPFile : public AMergingObject{
 		std::unique_ptr<AMergingObject> createMerger() const override;
 		
 		FileObjectId type() const override{ return ID::PP_MERGER; }
+		
+		void combine( const FileObject& with ) override;
+		void combine( const class PPFile& with );
+		void combine( const MergedPPFile& with );
 };
 
 #endif

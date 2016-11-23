@@ -2,6 +2,7 @@
  * under the terms of the GNU GPL v3.0. (see http://www.gnu.org/licenses/ ) */
 
 #include "MergedPPFile.hpp"
+#include "../PPFile.hpp"
 #include "../../decoders/PPArchive.hpp"
 #include "../../decoders/PPCrypto.hpp"
 #include "../../utils/debug.hpp"
@@ -259,3 +260,51 @@ std::unique_ptr<FileHandle> MergedPPFile::openRead() const
 
 std::unique_ptr<AMergingObject> MergedPPFile::createMerger() const
 	{ return std::make_unique<MergedPPFile>( *this ); }
+
+bool MergedPPFile::contains( const PPSubFile& file ) const{
+	return std::any_of( files.begin(), files.end()
+		,	[&]( auto& item ){ return item.parent->filename == file.filename; }
+		);
+}
+	
+void MergedPPFile::combine( const FileObject& with ){
+	//Combine with MergedPPFile if possible
+	if( type() == with.type() ){
+		combine( *static_cast<const MergedPPFile*>( &with ) );
+		return;
+	}
+	
+	//Combine with PPFile if possible
+	if( with.type() == ID::PP_FILE ){
+		combine( *static_cast<const PPFile*>( &with ) );
+		return;
+	}
+	
+	std::cout << "Merging with: " << with.type() << "\n";
+	throw std::runtime_error( "MergedPPFile could not combine with object" );
+}
+
+void MergedPPFile::combine( const class PPFile& with ){
+	//Check for collisions
+	for( auto& sub : with.subfiles() )
+		if( contains( sub ) )
+			throw std::runtime_error( "Duplicate element in PP file (TODO: support merging)" );
+	
+	//Add files
+	addPP( with.subfiles() );
+}
+
+void MergedPPFile::combine( const MergedPPFile& with ){
+	//Prepare new subfiles
+	std::vector<PPSubFile> new_files;
+	new_files.reserve( with.subfiles().size() );
+	
+	for( auto& sub : with.subfiles() ){
+		//Check for collisions
+		if( contains( *sub.parent ) )
+			throw std::runtime_error( "Duplicate element in PP file (TODO: support merging)" );
+		new_files.push_back( *sub.parent );
+	}
+	
+	addPP( new_files );
+}
