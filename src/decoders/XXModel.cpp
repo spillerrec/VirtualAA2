@@ -150,8 +150,8 @@ Mesh::Mesh( ByteViewReader& reader, int format, int vector2count ){
 	index = reader.read32u();
 	
 	//Read faces
-	faces_count = reader.read32u();
-	faces = reader.read( faces_count * 2 );
+	faces_count = reader.read32u() / 3;
+	faces = reader.read( faces_count * 6 );
 	//Note: count is only a third, i.e. 6 bytes per face?
 	
 	//Read vertices
