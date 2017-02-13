@@ -88,7 +88,7 @@ static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepat
 	return 0;
 }
 
-constexpr bool WRITE_MESH = false;
+constexpr bool WRITE_MESH = true;
 constexpr bool WRITE_DUPES = false;
 constexpr bool WRITE_BONES = false;
 static void write_frame_data( const std::wstring& folder, const XX::Frame& frame, int& frame_count, Deduper& dedupe_meshes ){
@@ -99,8 +99,12 @@ static void write_frame_data( const std::wstring& folder, const XX::Frame& frame
 	for( auto& mesh : frame.meshes ){
 		if( mesh.vertexes.size() > 0 ){
 			if( WRITE_MESH ){
-				auto out_path = base_name + L"mesh_" + std::to_wstring( mesh_id++ );
+				auto out_path = base_name + L"mesh_" + std::to_wstring( mesh_id );
 				File( out_path.c_str(), L"wb" ).write( mesh.vertexes );
+				
+				auto out_path2 = base_name + L"face_" + std::to_wstring( mesh_id );
+				File( out_path2.c_str(), L"wb" ).write( mesh.faces );
+				mesh_id++;
 			}
 			dedupe_meshes.add( mesh.vertexes );
 		}
@@ -177,7 +181,7 @@ static int split_xx( const wchar_t* xx_dir ){
 		}
 		
 		int frame_count = 1;
-	//	write_frame_data( out_folder, xx.frame, frame_count, dedupe_meshes );
+		write_frame_data( out_folder, xx.frame, frame_count, dedupe_meshes );
 	}
 	
 	std::cout << "Total mesh size: " << dedupe_meshes.total_size() << "\n";

@@ -143,49 +143,82 @@ class Model{
 			return vertex_lookup[id];
 		}
 		
+		void addMesh( const XX::Mesh& input );
+		void createLookup();
+		
 	public:
-		Model( const XX::Mesh& input );
+		Model( const XX::Mesh& mesh ){
+			addMesh( mesh );
+			createLookup();
+		}
+		Model( const std::vector<XX::Mesh>& meshes ){
+			for( auto& mesh : meshes )
+				addMesh( mesh );
+			createLookup();
+		}
 		
 		void addFaces( std::vector<GLfloat>& points ) const;
 };
 
-Model::Model( const XX::Mesh& input ){
-	faces.reserve( input.faces_count );
+void Model::addMesh( const XX::Mesh& input ){
+	faces.reserve( faces.size() + input.faces_count );
 	for( unsigned i=0; i < input.faces_count; i++ )
 		faces.emplace_back( input.faces.subView( i*6, 6 ) );
 	
-	vertices.reserve( input.vertex_count );
+	vertices.reserve( vertices.size() + input.vertex_count );
 	for( unsigned i=0; i < input.vertex_count; i++ )
 		vertices.emplace_back( input.vertexes.subView( i*70, 70 ) );
-	
+};
+
+void Model::createLookup(){
 	//Construct lookup
 	auto max_id = std::max_element( vertices.begin(), vertices.end() )->id;
+	vertex_lookup.clear();
 	vertex_lookup.resize( max_id+1, nullptr );
-	for( auto& vertex : vertices )
+	for( auto& vertex : vertices ){
+		if( vertex_lookup[vertex.id] )
+			std::cout << "Warning, id already defined: " << vertex.id << std::endl;
 		vertex_lookup[vertex.id] = &vertex;
+	}
 }
 
 void Model::addFaces( std::vector<GLfloat>& points ) const{
 	points.reserve( points.size() + faces.size() * 3 * 3 );
 	for( auto& face : faces ){
+		/*
 		auto addVertex = [&]( uint16_t id ){
 				auto vertex = getVertex( id );
-				if( !vertex ){
-					;//throw std::runtime_error( "Missing vertex lookup" );
-					auto end = points.size()-3;
-					points.push_back( points[end+0] );
-					points.push_back( points[end+1] );
-					points.push_back( points[end+2] );
-				}
-				else{
-					points.push_back( vertex->x );
-					points.push_back( vertex->y );
-					points.push_back( vertex->z );
-				}
+				if( !vertex )
+					throw std::runtime_error( "Missing vertex lookup" );
+				
+				points.push_back( vertex->x );
+				points.push_back( vertex->y );
+				points.push_back( vertex->z );
 			};
 		addVertex( face.a );
 		addVertex( face.b );
+		addVertex( face.b );
 		addVertex( face.c );
+		addVertex( face.c );
+		addVertex( face.a );
+		/*/
+		auto vertex_a = getVertex( face.a );
+		auto vertex_b = getVertex( face.b );
+		auto vertex_c = getVertex( face.c );
+		if( vertex_a && vertex_b && vertex_c ){
+			auto addVertex = [&]( const Vertex& v ){
+					points.push_back( v.x );
+					points.push_back( v.y );
+					points.push_back( v.z );
+				};
+			addVertex( *vertex_a );
+			addVertex( *vertex_b );
+			addVertex( *vertex_b );
+			addVertex( *vertex_c );
+			addVertex( *vertex_c );
+			addVertex( *vertex_a );
+		}
+		//*/
 	}
 }
 
@@ -211,8 +244,10 @@ Model::Face::Face( ByteView line ){
 }
 
 void getMeshes( const XX::Frame& frame, std::vector<Model>& models ){
-	for( auto& mesh : frame.meshes )
-		models.emplace_back( mesh );
+	if( frame.meshes.size() > 0 )	
+	//	models.emplace_back( frame.meshes );
+		for( auto& mesh : frame.meshes )
+			models.emplace_back( mesh );
 	
 	for( auto& child : frame.children )
 		getMeshes( child, models );
@@ -307,7 +342,8 @@ int main( int argc, char* argv[] ){
 		glUseProgram(programID);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size()); // Starting from vertex 0; 3 vertices total -> 1 triangle
+		//glDrawArrays(GL_TRIANGLES, 0, vertices.size()); // Starting from vertex 0; 3 vertices total -> 1 triangle
+		glDrawArrays(GL_LINES, 0, vertices.size()); // Starting from vertex 0; 3 vertices total -> 1 triangle
 		glDisableVertexAttribArray(0);
 
 		// Swap buffers
