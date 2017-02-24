@@ -12,7 +12,7 @@ uint64_t zstd::maxSize( uint64_t uncompressed_size )
 	{ return ZSTD_compressBound( uncompressed_size ); }
 
 ByteView zstd::compress( ConstByteView data, ByteView out ){
-	auto result = ZSTD_compress( out.begin(), out.size(), data.begin(), data.size(), 11 );
+	auto result = ZSTD_compress( out.begin(), out.size(), data.begin(), data.size(), 19 );
 	if( ZSTD_isError(result) )
 		return {};
 	return out.left( result );
