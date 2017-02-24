@@ -15,6 +15,7 @@ namespace ID{
 	constexpr uint64_t PP_MERGER      =  9;
 	constexpr uint64_t PASS_MERGER    = 10;
 	constexpr uint64_t FAKE_DIR       = 11;
+	constexpr uint64_t ZSTD           = 12;
 }
 
 #endif

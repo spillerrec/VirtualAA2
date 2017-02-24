@@ -7,6 +7,7 @@
 #include "filesystem/FilePath.hpp"
 #include "filesystem/FileSystem.hpp"
 #include "filesystem/Lz4File.hpp"
+#include "filesystem/ZstdFile.hpp"
 #include "filesystem/VirtualDataDir.hpp"
 #include "filesystem/PPFolder.hpp"
 #include "resources/Deduper.hpp"
@@ -39,7 +40,7 @@ static void copy_file_object( const FileObject& object, const wchar_t* to ){
 	}
 }
 
-static void compress_lz4_file_object( const FileObject& object, const wchar_t* to ){
+static int compress_lz4_file_object( const FileObject& object, const wchar_t* to, const wchar_t* format ){
 	auto handle = object.openRead();
 	
 	File out( to, L"wb" );
@@ -48,7 +49,15 @@ static void compress_lz4_file_object( const FileObject& object, const wchar_t* t
 	Buffer data( size );
 	handle->read( data.view(), 0 );
 	
-	Lz4File::compressFile( std::wstring(to), ConstByteView{data.begin(), data.size()} );
+	auto w_format = std::wstring(format);
+	if( w_format == L"lz4" )
+		Lz4File::compressFile( std::wstring(to), ConstByteView{data.begin(), data.size()} );
+	else if( w_format == L"zstd" )
+		ZstdFile::compressFile( std::wstring(to), ConstByteView{data.begin(), data.size()} );
+	else
+		return error("Compression format not recognized");
+
+	return 0;
 }
 
 static int copy_file( const wchar_t* data_dir_path, const wchar_t* filepath, const wchar_t* to ){
@@ -62,15 +71,13 @@ static int copy_file( const wchar_t* data_dir_path, const wchar_t* filepath, con
 	return 0;
 }
 
-static int compress_lz4_file( const wchar_t* data_dir_path, const wchar_t* filepath, const wchar_t* to ){
+static int compress_lz4_file( const wchar_t* data_dir_path, const wchar_t* filepath, const wchar_t* to, const wchar_t* format ){
 	VirtualDataDir dir( data_dir_path );
 	auto file = dir.getFromPath( { filepath } );
 	if( !file )
 		return error( "File not found" );
 	
-	compress_lz4_file_object( *file, to );
-	
-	return 0;
+	return compress_lz4_file_object( *file, to, format );
 }
 
 static int compact_pp_test( const wchar_t* data_dir_path, const wchar_t* filepath, const wchar_t* dir, const wchar_t* name ){
@@ -211,11 +218,11 @@ int wmain( int argc, wchar_t* argv[] ){
 			else
 				return error( "VirtualAA2 --copy <path-to-aa2-data-dir> <file-to-copy> <output-path>" );
 		}
-		if( param1 == makeView( L"--compress-lz4" ) ){
-			if( argc == 5 )
-				return compress_lz4_file( argv[2], argv[3], argv[4] );
+		if( param1 == makeView( L"--compress" ) ){
+			if( argc == 6 )
+				return compress_lz4_file( argv[2], argv[3], argv[4], argv[5] );
 			else
-				return error( "VirtualAA2 --compress-lz4 <path-to-aa2-data-dir> <file-to-copy> <output-path>" );
+				return error( "VirtualAA2 --compress <path-to-aa2-data-dir> <file-to-copy> <output-path> <format>" );
 		}
 		else if( param1 == makeView( L"--compact-pp-test" ) ){
 			if( argc == 6 )

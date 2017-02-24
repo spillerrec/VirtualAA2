@@ -7,6 +7,7 @@
 #include "DeflateFile.hpp"
 #include "Lz4File.hpp"
 #include "LzmaFile.hpp"
+#include "ZstdFile.hpp"
 #include "PassthroughDir.hpp"
 #include "PassthroughFile.hpp"
 #include "PPFile.hpp"
@@ -33,6 +34,7 @@ std::unique_ptr<FileObject> FileFactory::makeFileObject( wstring parent, FolderC
 		if( check( L"[LZ4] "     ) )  return make_unique<    Lz4File>( path );
 		if( check( L"[LZMA] "    ) )  return make_unique<   LzmaFile>( path );
 		if( check( L"[DEFLATE] " ) )  return make_unique<DeflateFile>( path );
+		if( check( L"[ZSTD] "    ) )  return make_unique<   ZstdFile>( path );
 		
 		if( filename.size() > 3 )
 		if( filename.right(3) == WStringView(L".pp", 3) ) return make_unique<  PPFile>( path );
