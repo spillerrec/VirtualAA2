@@ -25,13 +25,11 @@ Buffer zstd::compress( ConstByteView data ){
 }
 
 bool zstd::decompress( ConstByteView data, ByteView out ){
-	/* WTF? Not defined? It is clearly in the header...
 	//Fail if decoded_size specified, and not the same
-	auto decompressed_size = ZSTD_findDecompressedSize( data.begin(), data.size() );
-    if( decompressed_size != 0 )
+	auto decompressed_size = ZSTD_getDecompressedSize( data.begin(), data.size() );
+	if( decompressed_size != 0 )
 		if( decompressed_size != out.size() )
 			return false;
-	*/
 	
 	auto decoded_size = ZSTD_decompress( out.begin(), out.size(), data.begin(), data.size() );
 	
